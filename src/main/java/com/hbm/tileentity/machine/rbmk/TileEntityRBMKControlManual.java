@@ -1,5 +1,6 @@
 package com.hbm.tileentity.machine.rbmk;
 
+import com.hbm.blocks.machine.rbmk.RBMKControl;
 import com.hbm.interfaces.IControlReceiver;
 import com.hbm.tileentity.machine.rbmk.TileEntityRBMKConsole.ColumnType;
 
@@ -11,10 +12,19 @@ public class TileEntityRBMKControlManual extends TileEntityRBMKControl implement
 
 	public RBMKColor color;
 	public double startingLevel;
+	
+	public TileEntityRBMKControlManual() {
+		super();
+	}
 
 	@Override
 	public String getName() {
 		return "container.rbmkControl";
+	}
+	
+	@Override
+	public boolean isModerated() {
+		return ((RBMKControl)this.getBlockType()).moderated;
 	}
 
 	@Override
@@ -23,12 +33,14 @@ public class TileEntityRBMKControlManual extends TileEntityRBMKControl implement
 		this.startingLevel = this.level;
 	}
 	
+	@Override
 	public double getMult() {
 		
 		double surge = 0;
 		
 		if(this.targetLevel < this.startingLevel && Math.abs(this.level - this.targetLevel) > 0.01D) {
-			surge = Math.sin(Math.pow(this.level, 15) * Math.PI) * (this.startingLevel - this.targetLevel) * RBMKDials.getSurgeMod(worldObj);
+			surge = Math.sin(Math.pow((1D - this.level), 15) * Math.PI) * (this.startingLevel - this.targetLevel) * RBMKDials.getSurgeMod(worldObj);
+			
 		}
 		
 		return this.level + surge;
@@ -64,6 +76,9 @@ public class TileEntityRBMKControlManual extends TileEntityRBMKControl implement
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
+
+		if(nbt.hasKey("startingLevel"))
+			this.startingLevel = nbt.getDouble("startingLevel");
 		
 		if(nbt.hasKey("color"))
 			this.color = RBMKColor.values()[nbt.getInteger("color")];
@@ -74,6 +89,9 @@ public class TileEntityRBMKControlManual extends TileEntityRBMKControl implement
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
+
+		nbt.setDouble("startingLevel", this.startingLevel);
+		nbt.setDouble("mult", this.getMult());
 		
 		if(color != null)
 			nbt.setInteger("color", color.ordinal());

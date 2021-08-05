@@ -6,6 +6,7 @@ import com.hbm.blocks.machine.rbmk.RBMKBase;
 import com.hbm.lib.RefStrings;
 import com.hbm.main.ResourceManager;
 import com.hbm.tileentity.machine.rbmk.TileEntityRBMKBase;
+import com.hbm.tileentity.machine.rbmk.TileEntityRBMKBoiler;
 import com.hbm.tileentity.machine.rbmk.TileEntityRBMKRod;
 
 import net.minecraft.client.renderer.Tessellator;
@@ -18,11 +19,6 @@ public class RenderRBMKLid extends TileEntitySpecialRenderer {
 	private ResourceLocation texture = new ResourceLocation(RefStrings.MODID + ":textures/blocks/rbmk/rbmk_blank.png");
 	private ResourceLocation texture_glass = new ResourceLocation(RefStrings.MODID + ":textures/blocks/rbmk/rbmk_blank_glass.png");
 	private static final ResourceLocation texture_rods = new ResourceLocation(RefStrings.MODID + ":textures/blocks/rbmk/rbmk_element.png");
-	
-	public RenderRBMKLid(String texture) {
-		this.texture = new ResourceLocation(texture + ".png");
-		//this.texture_glass = new ResourceLocation(texture + "_glass.png");
-	}
 
 	@Override
 	public void renderTileEntityAt(TileEntity te, double x, double y, double z, float i) {
@@ -74,10 +70,17 @@ public class RenderRBMKLid extends TileEntitySpecialRenderer {
 			if(meta == RBMKBase.DIR_GLASS_LID.ordinal()) {
 				bindTexture(texture_glass);
 			} else {
-				bindTexture(texture);
+				
+				if(control.getBlockType() instanceof RBMKBase) {
+					bindTexture(((RBMKBase)control.getBlockType()).coverTexture);
+				} else {
+					bindTexture(texture);
+				}
 				cherenkov = false;
 			}
 			
+			if(control instanceof TileEntityRBMKBoiler && meta != RBMKBase.DIR_GLASS_LID.ordinal())
+				ResourceManager.rbmk_rods.renderPart("Lid");
 			ResourceManager.rbmk_element.renderPart("Lid");
 			GL11.glPopMatrix();
 		}

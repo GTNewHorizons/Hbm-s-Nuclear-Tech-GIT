@@ -1,6 +1,7 @@
 package com.hbm.inventory.gui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.math.NumberUtils;
@@ -8,7 +9,6 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import com.hbm.handler.FluidTypeHandler.FluidType;
-import com.hbm.inventory.container.ContainerRBMKConsole;
 import com.hbm.lib.RefStrings;
 import com.hbm.packet.NBTControlPacket;
 import com.hbm.packet.PacketDispatcher;
@@ -18,16 +18,21 @@ import com.hbm.tileentity.machine.rbmk.TileEntityRBMKConsole.RBMKColumn;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 
-public class GUIRBMKConsole extends GuiInfoContainer {
+public class GUIRBMKConsole extends GuiScreen {
 	
 	private static ResourceLocation texture = new ResourceLocation(RefStrings.MODID + ":textures/gui/reactors/gui_rbmk_console.png");
 	private TileEntityRBMKConsole console;
+	protected int guiLeft;
+	protected int guiTop;
+	protected int xSize;
+	protected int ySize;
 	
 	private boolean[] selection = new boolean[15 * 15];
 	private boolean az5Lid = true;
@@ -36,7 +41,7 @@ public class GUIRBMKConsole extends GuiInfoContainer {
 	private GuiTextField field;
 
 	public GUIRBMKConsole(InventoryPlayer invPlayer, TileEntityRBMKConsole tedf) {
-		super(new ContainerRBMKConsole(invPlayer, tedf));
+		super();
 		this.console = tedf;
 		
 		this.xSize = 244;
@@ -45,20 +50,23 @@ public class GUIRBMKConsole extends GuiInfoContainer {
 	
 	public void initGui() {
 		super.initGui();
+		
+		this.guiLeft = (this.width - this.xSize) / 2;
+		this.guiTop = (this.height - this.ySize) / 2;
+		
 		Keyboard.enableRepeatEvents(true);
 		
-		for(int i = 0; i < 4; i++) {
-			this.field = new GuiTextField(this.fontRendererObj, guiLeft + 9, guiTop + 84, 35, 9);
-			this.field.setTextColor(0x00ff00);
-			this.field.setDisabledTextColour(0x008000);
-			this.field.setEnableBackgroundDrawing(false);
-			this.field.setMaxStringLength(3);
-		}
+		this.field = new GuiTextField(this.fontRendererObj, guiLeft + 9, guiTop + 84, 35, 9);
+		this.field.setTextColor(0x00ff00);
+		this.field.setDisabledTextColour(0x008000);
+		this.field.setEnableBackgroundDrawing(false);
+		this.field.setMaxStringLength(3);
 	}
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float f) {
-		super.drawScreen(mouseX, mouseY, f);
+		this.drawDefaultBackground();
+		this.drawGuiContainerBackgroundLayer(f, mouseX, mouseY);
 		
 		int bX = 86;
 		int bY = 11;
@@ -83,13 +91,18 @@ public class GUIRBMKConsole extends GuiInfoContainer {
 		this.drawCustomInfoStat(mouseX, mouseY, guiLeft + 61, guiTop + 70, 10, 10, mouseX, mouseY, new String[]{ "Select all control rods" } );
 		this.drawCustomInfoStat(mouseX, mouseY, guiLeft + 72, guiTop + 70, 10, 10, mouseX, mouseY, new String[]{ "Deselect all" } );
 		this.drawCustomInfoStat(mouseX, mouseY, guiLeft + 6, guiTop + 8, 76, 60, mouseX, mouseY, new String[]{ "ignore all this for now" } );
-		this.drawCustomInfoStat(mouseX, mouseY, guiLeft + 6, guiTop + 96, 76, 38, mouseX, mouseY, new String[]{ "and this too" } );
-
+		
 		this.drawCustomInfoStat(mouseX, mouseY, guiLeft + 6, guiTop + 70, 10, 10, mouseX, mouseY, new String[]{ "Select red group" } );
 		this.drawCustomInfoStat(mouseX, mouseY, guiLeft + 17, guiTop + 70, 10, 10, mouseX, mouseY, new String[]{ "Select yellow group" } );
 		this.drawCustomInfoStat(mouseX, mouseY, guiLeft + 28, guiTop + 70, 10, 10, mouseX, mouseY, new String[]{ "Select green group" } );
 		this.drawCustomInfoStat(mouseX, mouseY, guiLeft + 39, guiTop + 70, 10, 10, mouseX, mouseY, new String[]{ "Select blue group" } );
 		this.drawCustomInfoStat(mouseX, mouseY, guiLeft + 50, guiTop + 70, 10, 10, mouseX, mouseY, new String[]{ "Select purple group" } );
+	}
+	
+	public void drawCustomInfoStat(int mouseX, int mouseY, int x, int y, int width, int height, int tPosX, int tPosY, String[] text) {
+		
+		if(x <= mouseX && x + width > mouseX && y < mouseY && y + height >= mouseY)
+			this.func_146283_a(Arrays.asList(text), tPosX, tPosY);
 	}
 
 	@Override
@@ -196,19 +209,14 @@ public class GUIRBMKConsole extends GuiInfoContainer {
 			mc.getSoundHandler().playSound(PositionedSoundRecord.func_147674_a(new ResourceLocation("gui.button.press"), 1F));
 		}
 	}
-	
-	@Override
-	protected void drawGuiContainerForegroundLayer(int i, int j) {
-	}
 
-	@Override
 	protected void drawGuiContainerBackgroundLayer(float interp, int mX, int mY) {
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		Minecraft.getMinecraft().getTextureManager().bindTexture(texture);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
 		
 		if(az5Lid) {
-			drawTexturedModalRect(guiLeft + 30, guiTop + 138, 110, 172, 28, 28);
+			drawTexturedModalRect(guiLeft + 30, guiTop + 138, 228, 172, 28, 28);
 		}
 		
 		int bX = 86;
@@ -250,8 +258,9 @@ public class GUIRBMKConsole extends GuiInfoContainer {
 				int fr = 8 - (int)Math.ceil((col.data.getDouble("level") * 8));
 				drawTexturedModalRect(guiLeft + x + 4, guiTop + y + 1, 24, 183, 2, fr);
 				break;
-				
+
 			case FUEL:
+			case FUEL_SIM:
 				if(col.data.hasKey("c_heat")) {
 					int fh = (int)Math.ceil((col.data.getDouble("c_heat") - 20) * 8 / col.data.getDouble("c_maxHeat"));
 					drawTexturedModalRect(guiLeft + x + 1, guiTop + y + size - fh - 1, 11, 191 - fh, 2, fh);
@@ -292,6 +301,16 @@ public class GUIRBMKConsole extends GuiInfoContainer {
 		if(this.field.textboxKeyTyped(c, i))
 			return;
 		
+		if(i == 1 || i == this.mc.gameSettings.keyBindInventory.getKeyCode()) {
+			this.mc.thePlayer.closeScreen();
+			return;
+		}
+		
 		super.keyTyped(c, i);
+	}
+	
+	@Override
+	public boolean doesGuiPauseGame() {
+		return false;
 	}
 }

@@ -1,10 +1,12 @@
 package com.hbm.extprop;
 
 import com.hbm.handler.HbmKeybinds.EnumKeybind;
+import com.hbm.main.MainRegistry;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IExtendedEntityProperties;
 
@@ -38,7 +40,32 @@ public class HbmPlayerProps implements IExtendedEntityProperties {
 		return keysPressed[key.ordinal()];
 	}
 	
+	public boolean isJetpackActive() {
+		return this.enableBackpack && getKeyPressed(EnumKeybind.JETPACK);
+	}
+	
 	public void setKeyPressed(EnumKeybind key, boolean pressed) {
+		
+		if(!getKeyPressed(key) && pressed) {
+			
+			if(key == EnumKeybind.TOGGLE_JETPACK) {
+				this.enableBackpack = !this.enableBackpack;
+				
+				if(this.enableBackpack)
+					MainRegistry.proxy.displayTooltip(EnumChatFormatting.GREEN + "Jetpack ON");
+				else
+					MainRegistry.proxy.displayTooltip(EnumChatFormatting.RED + "Jetpack OFF");
+			}
+			if(key == EnumKeybind.TOGGLE_HEAD) {
+				this.enableHUD = !this.enableHUD;
+				
+				if(this.enableHUD)
+					MainRegistry.proxy.displayTooltip(EnumChatFormatting.GREEN + "HUD ON");
+				else
+					MainRegistry.proxy.displayTooltip(EnumChatFormatting.RED + "HUD OFF");
+			}
+		}
+		
 		keysPressed[key.ordinal()] = pressed;
 	}
 

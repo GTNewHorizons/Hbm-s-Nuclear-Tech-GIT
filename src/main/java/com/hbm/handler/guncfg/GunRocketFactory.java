@@ -18,7 +18,6 @@ import com.hbm.render.anim.HbmAnimations.AnimType;
 import com.hbm.render.util.RenderScreenOverlay.Crosshair;
 
 import net.minecraft.block.material.Material;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 public class GunRocketFactory {
@@ -356,7 +355,7 @@ public class GunRocketFactory {
 		bullet.incendiary = 5;
 		bullet.trail = 9;
 		
-		bullet.bImpact = BulletConfigFactory.getPhosphorousEffect(10, 60 * 20, 100, 0.5D);
+		bullet.bImpact = BulletConfigFactory.getPhosphorousEffect(10, 60 * 20, 100, 0.5D, 1F);
 		
 		return bullet;
 	}

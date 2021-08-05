@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Level;
 
 import com.google.common.collect.Multimap;
 import com.hbm.blocks.ModBlocks;
+import com.hbm.blocks.generic.BlockAshes;
 import com.hbm.config.GeneralConfig;
 import com.hbm.config.MobConfig;
 import com.hbm.config.WorldConfig;
@@ -40,7 +41,6 @@ import com.hbm.items.armor.ArmorFSB;
 import com.hbm.items.armor.ItemArmorMod;
 import com.hbm.items.armor.ItemModRevive;
 import com.hbm.items.armor.ItemModShackles;
-import com.hbm.items.special.ItemHot;
 import com.hbm.items.weapon.ItemGunBase;
 import com.hbm.lib.Library;
 import com.hbm.lib.ModDamageSource;
@@ -59,9 +59,12 @@ import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import cpw.mods.fml.common.gameevent.TickEvent.WorldTickEvent;
 import cpw.mods.fml.relauncher.ReflectionHelper;
+import cpw.mods.fml.relauncher.Side;
+import net.minecraft.client.Minecraft;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
@@ -84,6 +87,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
+import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
@@ -94,6 +98,7 @@ import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.FoodStats;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
@@ -111,6 +116,7 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerFlyableFallEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerUseItemEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 
@@ -180,7 +186,7 @@ public class ModEventHandler {
 			ItemStack stack = event.entityLiving.getEquipmentInSlot(i);
 			
 			if(stack != null && stack.getItem() instanceof ItemArmor && ArmorModHandler.hasMods(stack)) {
-
+				
 				ItemStack revive = ArmorModHandler.pryMods(stack)[ArmorModHandler.extra];
 				
 				if(revive != null) {
@@ -204,8 +210,13 @@ public class ModEventHandler {
 					//Shackles
 					if(revive.getItem() instanceof ItemModShackles && HbmLivingProps.getRadiation(event.entityLiving) < 1000F) {
 						
+						revive.setItemDamage(revive.getItemDamage() + 1);
+						
+						int dmg = revive.getItemDamage();
+						ArmorModHandler.applyMod(stack, revive);
+						
 						event.entityLiving.setHealth(event.entityLiving.getMaxHealth());
-						HbmLivingProps.incrementRadiation(event.entityLiving, Math.max(HbmLivingProps.getRadiation(event.entityLiving), 10F));
+						HbmLivingProps.incrementRadiation(event.entityLiving, dmg * dmg);
 						event.setCanceled(true);
 						return;
 					}
@@ -229,7 +240,7 @@ public class ModEventHandler {
 			event.entity.worldObj.spawnEntityInWorld(foeq);
 		}
 		
-		if(event.entity.getUniqueID().toString().equals(Library.HbMinecraft)) {
+		if(event.entity.getUniqueID().toString().equals(Library.HbMinecraft) || event.entity.getCommandSenderName().equals("HbMinecraft")) {
 			event.entity.dropItem(ModItems.book_of_, 1);
 		}
 		
@@ -308,7 +319,7 @@ public class ModEventHandler {
 		EntityLivingBase entity = event.entityLiving;
 		World world = event.world;
 		
-		if(!MobConfig.enableMobGear)
+		if(!MobConfig.enableMobGear || entity.isChild())
 			return;
 
 		if(entity instanceof EntityZombie) {
@@ -362,11 +373,12 @@ public class ModEventHandler {
 			ItemStack cladding = mods[ArmorModHandler.cladding];
 			
 			if(cladding != null && cladding.getItem() == ModItems.cladding_obsidian) {
-				
-				try {
-					ReflectionHelper.findField(Entity.class, "field_149500_a", "invulnerable").setBoolean(event.entityItem, true);
-				} catch(Exception e) { }
+				ReflectionHelper.setPrivateValue(Entity.class, event.entityItem, true, "field_149500_a", "invulnerable");
 			}
+		}
+		
+		if(yeet.getItem() == ModItems.bismuth_tool) {
+			ReflectionHelper.setPrivateValue(Entity.class, event.entityItem, true, "field_149500_a", "invulnerable");
 		}
 	}
 	
@@ -430,6 +442,31 @@ public class ModEventHandler {
 		}
 		
 		EntityEffectHandler.onUpdate(event.entityLiving);
+	}
+
+	public static int currentBrightness = 0;
+	public static int lastBrightness = 0;
+	
+	@SubscribeEvent
+	public void clentTick(ClientTickEvent event) {
+		
+		Minecraft mc = Minecraft.getMinecraft();
+		
+		if(mc.theWorld == null || mc.thePlayer == null)
+			return;
+		
+		if(event.phase == Phase.START && event.side == Side.CLIENT) {
+			if(BlockAshes.ashes > 256)
+				BlockAshes.ashes = 256;
+			
+			if(BlockAshes.ashes > 0)
+				BlockAshes.ashes -= 2;
+			
+			if(mc.theWorld.getTotalWorldTime() % 20 == 0) {
+				this.lastBrightness = this.currentBrightness;
+				currentBrightness = mc.theWorld.getLightBrightnessForSkyBlocks(MathHelper.floor_double(mc.thePlayer.posX), MathHelper.floor_double(mc.thePlayer.posY), MathHelper.floor_double(mc.thePlayer.posZ), 0);
+			}
+		}
 	}
 	
 	@SubscribeEvent
@@ -699,6 +736,102 @@ public class ModEventHandler {
 	}
 	
 	@SubscribeEvent
+	public void onWingFlop(TickEvent.PlayerTickEvent event) {
+
+		EntityPlayer player = event.player;
+		
+		if(event.phase == TickEvent.Phase.START) {
+			
+			if(player.getCurrentArmor(2) == null && !player.onGround) {
+				
+				boolean isBob = player.getUniqueID().toString().equals(Library.HbMinecraft) || player.getDisplayName().equals("HbMinecraft");
+				boolean isSol = player.getUniqueID().toString().equals(Library.SolsticeUnlimitd) || player.getDisplayName().equals("SolsticeUnlimitd");
+				
+				if(isBob || isSol) {
+					
+					ArmorUtil.resetFlightTime(player);
+					
+					if(player.fallDistance > 0)
+						player.fallDistance = 0;
+					
+					if(player.motionY < -0.4D)
+						player.motionY = -0.4D;
+					
+					HbmPlayerProps props = HbmPlayerProps.getData(player);
+					
+					if(isBob || player.getFoodStats().getFoodLevel() > 6) {
+						
+						if(props.isJetpackActive()) {
+							
+							double cap = (isBob ? 0.8D : 0.4D);
+							
+							if(player.motionY < cap)
+								player.motionY += 0.15D;
+							else
+								player.motionY = cap + 0.15D;
+							
+							if(isSol) {
+								if(player.getFoodStats().getSaturationLevel() > 0F)
+									player.addExhaustion(4F); //burn up saturation so that super-saturating foods have no effect
+								else
+									player.addExhaustion(0.2F); //4:1 -> 0.05 hunger per tick or 1 per second
+							}
+							
+						} else if(props.enableBackpack && !player.isSneaking()) {
+							
+							if(player.motionY < -1)
+								player.motionY += 0.4D;
+							else if(player.motionY < -0.1)
+								player.motionY += 0.2D;
+							else if(player.motionY < 0)
+								player.motionY = 0;
+
+							if(isSol) {
+								if(player.getFoodStats().getSaturationLevel() > 0F)
+									player.addExhaustion(4F);
+								else
+									player.addExhaustion(0.04F);
+							}
+							
+						} else if(!props.enableBackpack && player.isSneaking()) {
+							
+							if(player.motionY < -0.08) {
+	
+								double mo = player.motionY * (isBob ? -0.6 : -0.4);
+								player.motionY += mo;
+	
+								Vec3 vec = player.getLookVec();
+								vec.xCoord *= mo;
+								vec.yCoord *= mo;
+								vec.zCoord *= mo;
+	
+								player.motionX += vec.xCoord;
+								player.motionY += vec.yCoord;
+								player.motionZ += vec.zCoord;
+							}
+						}
+					}
+					
+					Vec3 orig = player.getLookVec();
+					Vec3 look = Vec3.createVectorHelper(orig.xCoord, 0, orig.zCoord).normalize();
+					double mod = props.enableBackpack ? (isBob ? 0.5D : 0.25D) : 0.125D;
+					
+					if(player.moveForward != 0) {
+						player.motionX += look.xCoord * 0.35 * player.moveForward * mod;
+						player.motionZ += look.zCoord * 0.35 * player.moveForward * mod;
+					}
+					
+					if(player.moveStrafing != 0) {
+						look.rotateAroundY((float) Math.PI * 0.5F);
+						player.motionX += look.xCoord * 0.15 * player.moveStrafing * mod;
+						player.motionZ += look.zCoord * 0.15 * player.moveStrafing * mod;
+					}
+				}
+			}
+		}
+	}
+	
+	@SubscribeEvent
 	public void onPlayerTick(TickEvent.PlayerTickEvent event) {
 		
 		EntityPlayer player = event.player;
@@ -788,26 +921,24 @@ public class ModEventHandler {
 	}
 	
 	@SubscribeEvent
-    public void enteringChunk(EnteringChunk evt)
-    {
-        if(evt.entity instanceof EntityMissileBaseAdvanced)
-        {
-            ((EntityMissileBaseAdvanced)evt.entity).loadNeighboringChunks(evt.newChunkX, evt.newChunkZ);
-        }
-        
-        if(evt.entity instanceof EntityMissileCustom)
-        {
-            ((EntityMissileCustom)evt.entity).loadNeighboringChunks(evt.newChunkX, evt.newChunkZ);
-        }
-    }
+	public void enteringChunk(EnteringChunk evt) {
+		
+		if(evt.entity instanceof EntityMissileBaseAdvanced) {
+			((EntityMissileBaseAdvanced) evt.entity).loadNeighboringChunks(evt.newChunkX, evt.newChunkZ);
+		}
+
+		if(evt.entity instanceof EntityMissileCustom) {
+			((EntityMissileCustom) evt.entity).loadNeighboringChunks(evt.newChunkX, evt.newChunkZ);
+		}
+	}
 	
 	@SubscribeEvent
-    public void onPlayerClone(net.minecraftforge.event.entity.player.PlayerEvent.Clone event) {
+	public void onPlayerClone(net.minecraftforge.event.entity.player.PlayerEvent.Clone event) {
 		
 		NBTTagCompound data = new NBTTagCompound();
 		HbmPlayerProps.getData(event.original).saveNBTData(data);
 		HbmPlayerProps.getData(event.entityPlayer).loadNBTData(data);
-    }
+	}
 	
 	@SubscribeEvent
 	public void itemCrafted(PlayerEvent.ItemCraftedEvent e) {
@@ -1037,85 +1168,35 @@ public class ModEventHandler {
 		if(event.left.getItem() instanceof ItemGunBase && event.right.getItem() == Items.enchanted_book) {
 			
 			event.output = event.left.copy();
-
-            Map mapright = EnchantmentHelper.getEnchantments(event.right);
-            Iterator itr = mapright.keySet().iterator();
-
-            while (itr.hasNext()) {
-            	
-            	int i = ((Integer)itr.next()).intValue();
-            	int j = ((Integer)mapright.get(Integer.valueOf(i))).intValue();
-            	Enchantment e = Enchantment.enchantmentsList[i];
-            	
-            	EnchantmentUtil.removeEnchantment(event.output, e);
-            	EnchantmentUtil.addEnchantment(event.output, e, j);
-            }
-            
-            event.cost = 10;
-		}
-		
-		if(event.left.getItem() == ModItems.ingot_meteorite && event.right.getItem() == ModItems.ingot_meteorite &&
-				event.left.stackSize == 1 && event.right.stackSize == 1) {
 			
-			double h1 = ItemHot.getHeat(event.left);
-			double h2 = ItemHot.getHeat(event.right);
+			Map mapright = EnchantmentHelper.getEnchantments(event.right);
+			Iterator itr = mapright.keySet().iterator();
 			
-			if(h1 >= 0.5 && h2 >= 0.5) {
-	            
-				ItemStack out = new ItemStack(ModItems.ingot_meteorite_forged);
-				ItemHot.heatUp(out, (h1 + h2) / 2D);
-				event.output = out;
-	            event.cost = 10;
-			}
-		}
-		
-		if(event.left.getItem() == ModItems.ingot_meteorite_forged && event.right.getItem() == ModItems.ingot_meteorite_forged &&
-				event.left.stackSize == 1 && event.right.stackSize == 1) {
-			
-			double h1 = ItemHot.getHeat(event.left);
-			double h2 = ItemHot.getHeat(event.right);
-			
-			if(h1 >= 0.5 && h2 >= 0.5) {
-	            
-				ItemStack out = new ItemStack(ModItems.blade_meteorite);
-				ItemHot.heatUp(out, (h1 + h2) / 2D);
-				event.output = out;
-	            event.cost = 30;
-			}
-		}
-		
-		if(event.left.getItem() == ModItems.meteorite_sword_seared && event.right.getItem() == ModItems.ingot_meteorite_forged &&
-				event.left.stackSize == 1 && event.right.stackSize == 1) {
-			
-			double h2 = ItemHot.getHeat(event.right);
-			
-			if(h2 >= 0.5) {
-	            
-				ItemStack out = new ItemStack(ModItems.meteorite_sword_reforged);
-				event.output = out;
-	            event.cost = 50;
-			}
-		}
-		
-		if(event.left.getItem() == ModItems.ingot_steel_dusted && event.right.getItem() == ModItems.ingot_steel_dusted &&
-				event.left.stackSize ==  event.right.stackSize) {
-
-			double h1 = ItemHot.getHeat(event.left);
-			double h2 = ItemHot.getHeat(event.right);
-			
-			if(h2 >= 0.5) {
-
-				int i1 = event.left.getItemDamage();
-				int i2 = event.right.getItemDamage();
+			while(itr.hasNext()) {
 				
-				int i3 = Math.min(i1, i2) + 1;
+				int i = ((Integer) itr.next()).intValue();
+				int j = ((Integer) mapright.get(Integer.valueOf(i))).intValue();
+				Enchantment e = Enchantment.enchantmentsList[i];
 				
-				boolean done = i3 >= 10;
-	            
-				ItemStack out = new ItemStack(done ? ModItems.ingot_chainsteel : ModItems.ingot_steel_dusted, event.left.stackSize, done ? 0 : i3);
-				ItemHot.heatUp(out, done ? 1D : (h1 + h2) / 2D);
-				event.output = out;
-	            event.cost = event.left.stackSize;
+				EnchantmentUtil.removeEnchantment(event.output, e);
+				EnchantmentUtil.addEnchantment(event.output, e, j);
+			}
+			
+			event.cost = 10;
+		}
+	}
+	
+	@SubscribeEvent
+	public void onFoodEaten(PlayerUseItemEvent.Finish event) {
+		
+		ItemStack stack = event.item;
+		
+		if(stack != null && stack.getItem() instanceof ItemFood) {
+			
+			if(stack.hasTagCompound() && stack.getTagCompound().getBoolean("ntmCyanide")) {
+				for(int i = 0; i < 10; i++) {
+					event.entityPlayer.attackEntityFrom(rand.nextBoolean() ? ModDamageSource.euthanizedSelf : ModDamageSource.euthanizedSelf2, 1000);
+				}
 			}
 		}
 	}

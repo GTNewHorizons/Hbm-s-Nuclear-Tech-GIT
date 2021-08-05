@@ -1,8 +1,11 @@
 package com.hbm.tileentity.machine.rbmk;
 
 import com.hbm.blocks.ModBlocks;
+import com.hbm.blocks.machine.rbmk.RBMKBase;
+import com.hbm.blocks.machine.rbmk.RBMKRod;
 import com.hbm.entity.projectile.EntityRBMKDebris.DebrisType;
 import com.hbm.handler.radiation.ChunkRadiationManager;
+import com.hbm.items.ModItems;
 import com.hbm.items.machine.ItemRBMKRod;
 import com.hbm.tileentity.machine.rbmk.TileEntityRBMKConsole.ColumnType;
 
@@ -26,6 +29,11 @@ public class TileEntityRBMKRod extends TileEntityRBMKSlottedBase implements IRBM
 	@Override
 	public String getName() {
 		return "container.rbmkRod";
+	}
+	
+	@Override
+	public boolean isModerated() {
+		return ((RBMKRod)this.getBlockType()).moderated;
 	}
 
 	@SuppressWarnings("incomplete-switch") //shut the fuck up
@@ -80,6 +88,8 @@ public class TileEntityRBMKRod extends TileEntityRBMKSlottedBase implements IRBM
 				this.fluxSlow = 0;
 				
 				hasRod = false;
+				
+				super.updateEntity();
 			}
 		}
 	}
@@ -110,78 +120,107 @@ public class TileEntityRBMKRod extends TileEntityRBMKSlottedBase implements IRBM
 			ForgeDirection.WEST
 	};
 	
-	private void spreadFlux(NType type, double fluxOut) {
+	protected static NType stream;
+	
+	protected void spreadFlux(NType type, double fluxOut) {
 		
-		int range = 5;
+		int range = RBMKDials.getFluxRange(worldObj);
 		
 		for(ForgeDirection dir : fluxDirs) {
 			
-			NType stream = type;
+			stream = type;
 			double flux = fluxOut;
 			
 			for(int i = 1; i <= range; i++) {
-			
-				TileEntity te = worldObj.getTileEntity(xCoord + dir.offsetX * i, yCoord, zCoord + dir.offsetZ * i);
-
-				//burn baby burn
-				if(te instanceof TileEntityRBMKRod) {
-					TileEntityRBMKRod rod = (TileEntityRBMKRod)te;
-					
-					if(rod.getStackInSlot(0) != null && rod.getStackInSlot(0).getItem() instanceof ItemRBMKRod) {
-						rod.receiveFlux(stream, flux);
-						break;
-					}
-				}
-				if(te instanceof IRBMKFluxReceiver) {
-					IRBMKFluxReceiver rod = (IRBMKFluxReceiver)te;
-					rod.receiveFlux(stream, flux);
+				
+				flux = runInteraction(xCoord + dir.offsetX * i, yCoord, zCoord + dir.offsetZ * i, flux);
+				
+				if(flux <= 0)
 					break;
-				}
-				
-				//set neutrons to slow
-				if(te instanceof TileEntityRBMKControl) {
-					TileEntityRBMKControl control = (TileEntityRBMKControl)te;
-					
-					if(control.getMult() == 0.0D)
-						break;
-					
-					flux *= control.getMult();
-					continue;
-				}
-				
-				//set neutrons to slow
-				if(te instanceof TileEntityRBMKModerator) {
-					stream = NType.SLOW;
-					continue;
-				}
-				
-				//return the neutrons back to this with no further action required
-				if(te instanceof TileEntityRBMKReflector) {
-					this.receiveFlux(stream, flux);
-					break;
-				}
-				
-				//break the neutron flow and nothign else
-				if(te instanceof TileEntityRBMKAbsorber) {
-					break;
-				}
-				
-				if(te instanceof TileEntityRBMKBase) {
-					continue;
-				}
-				
-				int limit = RBMKDials.getColumnHeight(worldObj);
-				int hits = 0;
-				for(int h = 0; h <= limit; h++) {
-					
-					if(!worldObj.getBlock(xCoord + dir.offsetX * i, yCoord + h, zCoord + dir.offsetZ * i).isOpaqueCube())
-						hits++;
-				}
-				
-				if(hits > 0)
-					ChunkRadiationManager.proxy.incrementRad(worldObj, xCoord, yCoord, zCoord, (float) (flux * 0.05F * hits / (float)limit));
 			}
 		}
+	}
+	
+	protected double runInteraction(int x, int y, int z, double flux) {
+		
+		TileEntity te = worldObj.getTileEntity(x, y, z);
+		
+		if(te instanceof TileEntityRBMKBase) {
+			TileEntityRBMKBase base = (TileEntityRBMKBase) te;
+			
+			if(!base.hasLid())
+				ChunkRadiationManager.proxy.incrementRad(worldObj, xCoord, yCoord, zCoord, (float) (flux * 0.05F));
+			
+			if(base.isModerated()) {
+				
+				if(this.stream != NType.SLOW) {
+					//flux *= 0.85D;
+				} else {
+					this.stream = NType.SLOW;
+				}
+			}
+		}
+
+		//burn baby burn
+		if(te instanceof TileEntityRBMKRod) {
+			TileEntityRBMKRod rod = (TileEntityRBMKRod)te;
+			
+			if(rod.getStackInSlot(0) != null && rod.getStackInSlot(0).getItem() instanceof ItemRBMKRod) {
+				rod.receiveFlux(stream, flux);
+				return 0;
+			}
+		}
+		if(te instanceof IRBMKFluxReceiver) {
+			IRBMKFluxReceiver rod = (IRBMKFluxReceiver)te;
+			rod.receiveFlux(stream, flux);
+			return 0;
+		}
+		
+		//set neutrons to slow
+		if(te instanceof TileEntityRBMKControl) {
+			TileEntityRBMKControl control = (TileEntityRBMKControl)te;
+			
+			if(control.getMult() == 0.0D)
+				return 0;
+			
+			flux *= control.getMult();
+			
+			return flux;
+		}
+		
+		//set neutrons to slow
+		if(te instanceof TileEntityRBMKModerator) {
+			stream = NType.SLOW;
+			return flux;
+		}
+		
+		//return the neutrons back to this with no further action required
+		if(te instanceof TileEntityRBMKReflector) {
+			this.receiveFlux(stream, flux);
+			return 0;
+		}
+		
+		//break the neutron flow and nothign else
+		if(te instanceof TileEntityRBMKAbsorber) {
+			return 0;
+		}
+		
+		if(te instanceof TileEntityRBMKBase) {
+			return flux;
+		}
+		
+		int limit = RBMKDials.getColumnHeight(worldObj);
+		int hits = 0;
+		for(int h = 0; h <= limit; h++) {
+			
+			if(!worldObj.getBlock(x, y, z).isOpaqueCube())
+				hits++;
+		}
+		
+		if(hits > 0)
+			ChunkRadiationManager.proxy.incrementRad(worldObj, xCoord, yCoord, zCoord, (float) (flux * 0.05F * hits / (float)limit));
+		
+		return 0;
 	}
 	
 	@Override
@@ -218,47 +257,44 @@ public class TileEntityRBMKRod extends TileEntityRBMKSlottedBase implements IRBM
 	@Override
 	public void onMelt(int reduce) {
 
-		reduce = MathHelper.clamp_int(reduce, 1, 3);
+		int h = RBMKDials.getColumnHeight(worldObj);
+		reduce = MathHelper.clamp_int(reduce, 1, h);
 		
 		if(worldObj.rand.nextInt(3) == 0)
 			reduce++;
 		
 		boolean corium = slots[0] != null && slots[0].getItem() instanceof ItemRBMKRod;
-		slots[0] = null;
 		
-		for(int i = 3; i >= 0; i--) {
-			
-			if(i <= 4 - reduce) {
-				
-				if(corium) {
-					worldObj.setBlock(xCoord, yCoord + i, zCoord, ModBlocks.corium_block);
-					
-				} else {
-					if(reduce > 1 && i == 4 - reduce) {
-						worldObj.setBlock(xCoord, yCoord + i, zCoord, ModBlocks.pribris_burning);
-						
-					} else {
-						worldObj.setBlock(xCoord, yCoord + i, zCoord, ModBlocks.pribris);
-					}
-				}
-				
-			} else {
-				worldObj.setBlock(xCoord, yCoord + i, zCoord, Blocks.air);
-			}
-			worldObj.markBlockForUpdate(xCoord, yCoord + i, zCoord);
-		}
+		if(corium && slots[0].getItem() == ModItems.rbmk_fuel_drx) 
+			RBMKBase.digamma = true;
+		
+		slots[0] = null;
 
 		if(corium) {
-			int count = 1 + worldObj.rand.nextInt(3);
+			
+			for(int i = h; i >= 0; i--) {
+				
+				if(i <= h + 1 - reduce) {
+					worldObj.setBlock(xCoord, yCoord + i, zCoord, ModBlocks.corium_block);
+				} else {
+					worldObj.setBlock(xCoord, yCoord + i, zCoord, Blocks.air);
+				}
+				worldObj.markBlockForUpdate(xCoord, yCoord + i, zCoord);
+			}
+			
+			int count = 1 + worldObj.rand.nextInt(RBMKDials.getColumnHeight(worldObj));
 			
 			for(int i = 0; i < count; i++) {
 				spawnDebris(DebrisType.FUEL);
 			}
+		} else {
+			this.standardMelt(reduce);
 		}
 		
 		spawnDebris(DebrisType.ELEMENT);
 		
-		super.onMelt(reduce);
+		if(this.getBlockMetadata() == RBMKBase.DIR_NORMAL_LID.ordinal() + RBMKBase.offset)
+			spawnDebris(DebrisType.LID);
 	}
 
 	@Override

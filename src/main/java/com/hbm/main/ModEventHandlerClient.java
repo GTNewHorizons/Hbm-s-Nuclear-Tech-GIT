@@ -6,9 +6,11 @@ import java.util.Random;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
+import com.hbm.blocks.generic.BlockAshes;
 import com.hbm.entity.mob.EntityHunterChopper;
 import com.hbm.entity.projectile.EntityChopperMine;
 import com.hbm.extprop.HbmLivingProps;
+import com.hbm.extprop.HbmPlayerProps;
 import com.hbm.handler.ArmorModHandler;
 import com.hbm.handler.HTTPHandler;
 import com.hbm.handler.HazmatRegistry;
@@ -48,13 +50,13 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.hbm.sound.MovingSoundPlayerLoop.EnumHbmSound;
 
 import cpw.mods.fml.client.FMLClientHandler;
-import cpw.mods.fml.common.eventhandler.Event.Result;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
@@ -71,12 +73,10 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.GuiIngameForge;
-import net.minecraftforge.client.event.EntityViewRenderEvent.FogColors;
-import net.minecraftforge.client.event.EntityViewRenderEvent.FogDensity;
-import net.minecraftforge.client.event.EntityViewRenderEvent.RenderFogEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderItemInFrameEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -317,6 +317,13 @@ public class ModEventHandlerClient {
 				((ItemArmorMod)armor.getItem()).modRender(event, armor);
 			}
 		}
+		
+		if(player.getCurrentArmor(2) == null && !player.isPotionActive(Potion.invisibility)) {
+			if(player.getUniqueID().toString().equals(Library.SolsticeUnlimitd) || player.getDisplayName().equals("SolsticeUnlimitd"))
+				RenderAccessoryUtility.renderSol(event);
+			if(player.getUniqueID().toString().equals(Library.HbMinecraft) || player.getDisplayName().equals("HbMinecraft"))
+				RenderAccessoryUtility.renderWings(event);
+		}
 	}
 
 	@SubscribeEvent
@@ -464,45 +471,115 @@ public class ModEventHandlerClient {
 		}
     }
 	
+	private ResourceLocation ashes = new ResourceLocation(RefStrings.MODID + ":textures/misc/overlay_ash.png");
+	
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
-	public void onRenderWorldLastEvent(RenderWorldLastEvent event) {
+	public void onRenderStorm(RenderHandEvent event) {
+		
+		if(BlockAshes.ashes == 0)
+			return;
 		
 		GL11.glPushMatrix();
 		
+		Minecraft mc = Minecraft.getMinecraft();
+
+		GL11.glRotatef((float)-mc.thePlayer.rotationYaw, 0, 1, 0);
+		GL11.glRotatef((float)(mc.thePlayer.rotationPitch), 1, 0, 0);
+		
+		ScaledResolution resolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthMask(false);
+		GL11.glEnable(GL11.GL_BLEND);
+		OpenGlHelper.glBlendFunc(770, 771, 1, 0);
+		GL11.glEnable(GL11.GL_ALPHA_TEST);
+		
+		int w = resolution.getScaledWidth();
+		int h = resolution.getScaledHeight();
+		double off = System.currentTimeMillis() / -10000D % 10000D;
+		double aw = 25;
+		
+		Tessellator tessellator = Tessellator.instance;
+
+		//int d = mc.theWorld.getLightBrightnessForSkyBlocks(MathHelper.floor_double(mc.thePlayer.posX), MathHelper.floor_double(mc.thePlayer.posY), MathHelper.floor_double(mc.thePlayer.posZ), 0);
+		int cX = ModEventHandler.currentBrightness % 65536;
+		int cY = ModEventHandler.currentBrightness / 65536;
+		int lX = ModEventHandler.lastBrightness % 65536;
+		int lY = ModEventHandler.lastBrightness / 65536;
+		float interp = (mc.theWorld.getTotalWorldTime() % 20) * 0.05F;
+		
+		if(mc.theWorld.getTotalWorldTime() == 1)
+			ModEventHandler.lastBrightness = ModEventHandler.currentBrightness;
+		
+		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float)(lX + (cX - lX) * interp) / 1.0F, (float)(lY + (cY - lY) * interp) / 1.0F);
+
+		mc.entityRenderer.enableLightmap((double)event.partialTicks);
+		
+		mc.getTextureManager().bindTexture(ashes);
+		
+		for(int i = 1; i < 3; i++) {
+			
+			GL11.glRotatef(-15, 0, 0, 1);
+			GL11.glColor4f(1.0F, 1.0F, 1.0F, BlockAshes.ashes / 256F * 0.98F / i);
+			
+			tessellator.startDrawingQuads();
+			tessellator.addVertexWithUV(-w * 0.25, 	h * 0.25, 	aw, 0.0D + off * i, 1.0D);
+			tessellator.addVertexWithUV(w * 0.25, 	h * 0.25, 	aw, 1.0D + off * i, 1.0D);
+			tessellator.addVertexWithUV(w * 0.25, 	-h * 0.25, 	aw, 1.0D + off * i, 0.0D);
+			tessellator.addVertexWithUV(-w * 0.25, 	-h * 0.25, 	aw, 0.0D + off * i, 0.0D);
+			tessellator.draw();
+		}
+
+		mc.entityRenderer.disableLightmap((double)event.partialTicks);
+		
+		GL11.glDepthMask(true);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glDisable(GL11.GL_BLEND);
+		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+
+		GL11.glPopMatrix();
+	}
+	
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent
+	public void onRenderWorldLastEvent(RenderWorldLastEvent event) {
+
+		GL11.glPushMatrix();
+
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 
 		double dx = player.prevPosX + (player.posX - player.prevPosX) * event.partialTicks;
 		double dy = player.prevPosY + (player.posY - player.prevPosY) * event.partialTicks;
 		double dz = player.prevPosZ + (player.posZ - player.prevPosZ) * event.partialTicks;
-		
+
 		int dist = 300;
 		int x = 0;
 		int y = 500;
 		int z = 0;
-		
+
 		Vec3 vec = Vec3.createVectorHelper(x - dx, y - dy, z - dz);
-		
-		if(vec.lengthVector() < dist) {
-			
+
+		if(player.worldObj.provider.dimensionId == 0 && vec.lengthVector() < dist && !HTTPHandler.capsule.isEmpty()) {
+
 			GL11.glTranslated(vec.xCoord, vec.yCoord, vec.zCoord);
-			
+
 			GL11.glPushMatrix();
 
-            RenderHelper.enableStandardItemLighting();
+			RenderHelper.enableStandardItemLighting();
 
 			GL11.glRotated(80, 0, 0, 1);
 			GL11.glRotated(30, 0, 1, 0);
-			
-	        double sine = Math.sin(System.currentTimeMillis() * 0.0005) * 5;
-	        double sin3 = Math.sin(System.currentTimeMillis() * 0.0005 + Math.PI * 0.5) * 5;
-	        GL11.glRotated(sine, 0, 0, 1);
-	        GL11.glRotated(sin3, 1, 0, 0);
-			
+
+			double sine = Math.sin(System.currentTimeMillis() * 0.0005) * 5;
+			double sin3 = Math.sin(System.currentTimeMillis() * 0.0005 + Math.PI * 0.5) * 5;
+			GL11.glRotated(sine, 0, 0, 1);
+			GL11.glRotated(sin3, 1, 0, 0);
+
 			GL11.glTranslated(0, -3, 0);
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 6500F, 30F);
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 6500F, 30F);
 			SoyuzPronter.prontCapsule();
-			
+
 			GL11.glRotated(System.currentTimeMillis() * 0.025 % 360, 0, -1, 0);
 
 			int rand = new Random(MainRegistry.startupTime).nextInt(HTTPHandler.capsule.size());
@@ -510,43 +587,45 @@ public class ModEventHandlerClient {
 
 			GL11.glTranslated(0, 3.75, 0);
 			GL11.glRotated(180, 1, 0, 0);
-			
+
 			float rot = 0F;
-			
-			//looks dumb but we'll use this technology for the cyclotron
+
+			// looks dumb but we'll use this technology for the cyclotron
 			for(char c : msg.toCharArray()) {
 
 				GL11.glPushMatrix();
-				
+
 				GL11.glRotatef(rot, 0, 1, 0);
-				
+
 				float width = Minecraft.getMinecraft().fontRenderer.getStringWidth(msg);
 				float scale = 5 / width;
-				
+
 				rot -= Minecraft.getMinecraft().fontRenderer.getCharWidth(c) * scale * 50;
-				
+
 				GL11.glTranslated(2, 0, 0);
-				
+
 				GL11.glRotatef(-90, 0, 1, 0);
 				GL11.glScalef(scale, scale, scale);
 				GL11.glDisable(GL11.GL_CULL_FACE);
 				Minecraft.getMinecraft().fontRenderer.drawString(String.valueOf(c), 0, 0, 0xff00ff);
 				GL11.glEnable(GL11.GL_CULL_FACE);
-	    		GL11.glPopMatrix();
+				GL11.glPopMatrix();
 			}
 			
-            RenderHelper.disableStandardItemLighting();
-    		
-    		GL11.glPopMatrix();
+			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+
+			RenderHelper.disableStandardItemLighting();
+
+			GL11.glPopMatrix();
 		}
-		
+
 		GL11.glPopMatrix();
-		
+
 		if(ArmorFSB.hasFSBArmor(player)) {
 			ItemStack plate = player.inventory.armorInventory[2];
-			ArmorFSB chestplate = (ArmorFSB)plate.getItem();
-			
-			if(chestplate.thermal)
+			ArmorFSB chestplate = (ArmorFSB) plate.getItem();
+
+			if(chestplate.thermal && HbmPlayerProps.getData(player).enableHUD)
 				RenderOverhead.renderThermalSight(event.partialTicks);
 		}
 	}
@@ -610,7 +689,7 @@ public class ModEventHandlerClient {
 		
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 		
-		if(ArmorFSB.hasFSBArmor(player)) {
+		if(ArmorFSB.hasFSBArmor(player) && HbmPlayerProps.getData(player).enableHUD) {
 			ItemStack plate = player.inventory.armorInventory[2];
 			ArmorFSB chestplate = (ArmorFSB)plate.getItem();
 			

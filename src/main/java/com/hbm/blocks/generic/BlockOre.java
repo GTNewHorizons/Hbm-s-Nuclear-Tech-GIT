@@ -43,13 +43,13 @@ public class BlockOre extends Block {
 
 	@Override
 	public Item getItemDropped(int i, Random rand, int j) {
-		if(this == ModBlocks.ore_fluorite) {
+		if(this == ModBlocks.ore_fluorite || this == ModBlocks.basalt_fluorite) {
 			return ModItems.fluorite;
 		}
 		if(this == ModBlocks.ore_niter) {
 			return ModItems.niter;
 		}
-		if(this == ModBlocks.ore_sulfur || this == ModBlocks.ore_nether_sulfur || this == ModBlocks.ore_meteor_sulfur) {
+		if(this == ModBlocks.ore_sulfur || this == ModBlocks.ore_nether_sulfur || this == ModBlocks.ore_meteor_sulfur || this == ModBlocks.basalt_sulfur) {
 			return ModItems.sulfur;
 		}
 		if(this == ModBlocks.waste_trinitite || this == ModBlocks.waste_trinitite_red) {
@@ -192,26 +192,20 @@ public class BlockOre extends Block {
 		if(this == ModBlocks.deco_asbestos) {
 			return ModItems.ingot_asbestos;
 		}
-		if(this == ModBlocks.ore_asbestos || this == ModBlocks.ore_gneiss_asbestos) {
+		if(this == ModBlocks.ore_asbestos || this == ModBlocks.ore_gneiss_asbestos || this == ModBlocks.basalt_asbestos) {
 			return ModItems.ingot_asbestos;
 		}
 		if(this == ModBlocks.ore_lignite) {
 			return ModItems.lignite;
 		}
-		if(this == ModBlocks.cluster_depth_iron) {
-			return ModItems.crystal_iron;
-		}
-		if(this == ModBlocks.cluster_depth_titanium) {
-			return ModItems.crystal_titanium;
-		}
-		if(this == ModBlocks.cluster_depth_tungsten) {
-			return ModItems.crystal_tungsten;
-		}
-		if(this == ModBlocks.ore_cinnebar || this == ModBlocks.ore_depth_cinnebar) {
+		if(this == ModBlocks.ore_cinnebar) {
 			return ModItems.cinnebar;
 		}
-		if(this == ModBlocks.ore_depth_zirconium) {
-			return ModItems.nugget_zirconium;
+		if(this == ModBlocks.ore_coltan) {
+			return ModItems.fragment_coltan;
+		}
+		if(this == ModBlocks.ore_cobalt || this == ModBlocks.ore_nether_cobalt) {
+			return ModItems.fragment_cobalt;
 		}
 
 		return Item.getItemFromBlock(this);
@@ -219,13 +213,13 @@ public class BlockOre extends Block {
 
 	@Override
 	public int quantityDropped(Random rand) {
-		if(this == ModBlocks.ore_fluorite) {
+		if(this == ModBlocks.ore_fluorite || this == ModBlocks.basalt_fluorite) {
 			return 2 + rand.nextInt(3);
 		}
 		if(this == ModBlocks.ore_niter) {
 			return 2 + rand.nextInt(3);
 		}
-		if(this == ModBlocks.ore_sulfur || this == ModBlocks.ore_nether_sulfur || this == ModBlocks.ore_meteor_sulfur) {
+		if(this == ModBlocks.ore_sulfur || this == ModBlocks.ore_nether_sulfur || this == ModBlocks.ore_meteor_sulfur || this == ModBlocks.basalt_sulfur) {
 			return 2 + rand.nextInt(3);
 		}
 		if(this == ModBlocks.ore_rare || this == ModBlocks.ore_gneiss_rare) {
@@ -237,11 +231,11 @@ public class BlockOre extends Block {
 		if(this == ModBlocks.block_meteor_treasure) {
 			return 1 + rand.nextInt(3);
 		}
-		if(this == ModBlocks.ore_depth_cinnebar) {
-			return 2 + rand.nextInt(3);
+		if(this == ModBlocks.ore_cobalt) {
+			return 4 + rand.nextInt(6);
 		}
-		if(this == ModBlocks.ore_depth_zirconium) {
-			return 2 + rand.nextInt(2);
+		if(this == ModBlocks.ore_nether_cobalt) {
+			return 5 + rand.nextInt(8);
 		}
 
 		return 1;

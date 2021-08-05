@@ -53,6 +53,7 @@ public class ConsumableRecipes {
 		GameRegistry.addShapelessRecipe(new ItemStack(ModItems.loop_stew), new Object[] { ModItems.loops, ModItems.can_smart, Items.bowl });
 		GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(ModItems.coffee), new Object[] { "dustCoal", Items.milk_bucket, Items.potionitem, Items.sugar }));
 		GameRegistry.addShapelessRecipe(new ItemStack(ModItems.coffee_radium), new Object[] { ModItems.coffee, ModItems.nugget_ra226 });
+		GameRegistry.addShapelessRecipe(new ItemStack(ModItems.ingot_smore), new Object[] { Items.wheat, new ItemStack(ModItems.marshmallow, 1, 1), new ItemStack(Items.dye, 1, 3) });
 		
 		//Peas
 		GameRegistry.addRecipe(new ItemStack(ModItems.peas), new Object[] { " S ", "SNS", " S ", 'S', Items.wheat_seeds, 'N', Items.gold_nugget });
@@ -111,6 +112,7 @@ public class ConsumableRecipes {
 		GameRegistry.addRecipe(new ItemStack(ModItems.pill_iodine, 8), new Object[] { "IF", 'I', ModItems.powder_iodine, 'F', ModItems.fluorite });
 		GameRegistry.addRecipe(new ItemStack(ModItems.plan_c, 1), new Object[] { "PFP", 'P', ModItems.powder_poison, 'F', ModItems.fluorite });
 		GameRegistry.addRecipe(new ItemStack(ModItems.radx, 1), new Object[] { "P", "F", 'P', ModItems.powder_coal, 'F', ModItems.fluorite });
+		GameRegistry.addRecipe(new ItemStack(ModItems.siox, 8), new Object[] { "PNF", 'P', ModItems.powder_coal, 'F', ModItems.powder_asbestos, 'N', ModItems.nugget_bismuth });
 		GameRegistry.addShapelessRecipe(new ItemStack(ModItems.xanax, 1), new Object[] { ModItems.powder_coal, ModItems.niter, ModItems.powder_bromine });
 		GameRegistry.addShapelessRecipe(new ItemStack(ModItems.fmn, 1), new Object[] { ModItems.powder_coal, ModItems.powder_polonium, ModItems.powder_strontium });
 		GameRegistry.addShapelessRecipe(new ItemStack(ModItems.five_htp, 1), new Object[] { ModItems.powder_coal, ModItems.powder_euphemium, ModItems.canteen_fab });
@@ -172,6 +174,7 @@ public class ConsumableRecipes {
 		GameRegistry.addRecipe(new ItemStack(ModItems.medal_liquidator, 1), new Object[] { "GBG", "BFB", "GBG", 'G', ModItems.nugget_au198, 'B', ModItems.ingot_boron, 'F', ModItems.debris_fuel });
 		GameRegistry.addShapelessRecipe(new ItemStack(ModItems.injector_5htp, 1), new Object[] { ModItems.five_htp, ModItems.circuit_targeting_tier1, ModItems.plate_saturnite });
 		GameRegistry.addShapelessRecipe(new ItemStack(ModItems.injector_knife, 1), new Object[] { ModItems.injector_5htp, Items.iron_sword });
+		GameRegistry.addRecipe(new ItemStack(ModItems.shackles, 1), new Object[] { "CIC", "C C", "I I", 'I', ModItems.ingot_chainsteel, 'C', ModBlocks.chain });
 		
 		//Stealth boy
 		GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(ModItems.stealth_boy, 1), new Object[] { " B", "LI", "LC", 'B', Item.getItemFromBlock(Blocks.stone_button), 'L', Items.leather, 'I', "ingotSteel", 'C', ModItems.circuit_red_copper }));

@@ -77,6 +77,8 @@ public class Library {
 	public static String lag_add = "259785a0-20e9-4c63-9286-ac2f93ff528f";
 	public static String Pu_238 = "c95fdfd3-bea7-4255-a44b-d21bc3df95e3";
 	public static String Tankish = "609268ad-5b34-49c2-abba-a9d83229af03";
+	public static String SolsticeUnlimitd = "f5574fd2-ec28-4927-9d11-3c0c731771f4";
+	public static String FrizzleFrazzle = "fc4cc2ee-12e8-4097-b26a-1c6cb1b96531";
 
 	public static Set<String> contributors = Sets.newHashSet(new String[] {
 			"06ab7c03-55ce-43f8-9d3c-2850e3c652de", //mustang_rudolf
@@ -599,16 +601,16 @@ public class Library {
 							{
 								((TileEntityPylonRedWire)tileentity).uoteab.get(i).ticked = newTact;
 								for(int j = 0; j < ((TileEntityPylonRedWire)tileentity).connected.size(); j++) {
-									TileEntityPylonRedWire pylon = ((TileEntityPylonRedWire)tileentity).connected.get(j);
+									int[] pylon = ((TileEntityPylonRedWire)tileentity).connected.get(j);
 									if(pylon != null) {
-										ffgeua(pylon.xCoord + 1, pylon.yCoord, pylon.zCoord, that.getTact(), that, worldObj);
-										ffgeua(pylon.xCoord - 1, pylon.yCoord, pylon.zCoord, that.getTact(), that, worldObj);
-										ffgeua(pylon.xCoord, pylon.yCoord + 1, pylon.zCoord, that.getTact(), that, worldObj);
-										ffgeua(pylon.xCoord, pylon.yCoord - 1, pylon.zCoord, that.getTact(), that, worldObj);
-										ffgeua(pylon.xCoord, pylon.yCoord, pylon.zCoord + 1, that.getTact(), that, worldObj);
-										ffgeua(pylon.xCoord, pylon.yCoord, pylon.zCoord - 1, that.getTact(), that, worldObj);
+										ffgeua(pylon[0] + 1, pylon[1], pylon[2], that.getTact(), that, worldObj);
+										ffgeua(pylon[0] - 1, pylon[1], pylon[2], that.getTact(), that, worldObj);
+										ffgeua(pylon[0], pylon[1] + 1, pylon[2], that.getTact(), that, worldObj);
+										ffgeua(pylon[0], pylon[1] - 1, pylon[2], that.getTact(), that, worldObj);
+										ffgeua(pylon[0], pylon[1], pylon[2] + 1, that.getTact(), that, worldObj);
+										ffgeua(pylon[0], pylon[1], pylon[2] - 1, that.getTact(), that, worldObj);
 										
-										ffgeua(pylon.xCoord, pylon.yCoord, pylon.zCoord, that.getTact(), that, worldObj);
+										ffgeua(pylon[0], pylon[1], pylon[2], that.getTact(), that, worldObj);
 									}
 								}
 							}
@@ -908,7 +910,7 @@ public class Library {
 					{
 						if(consume.getMaxFluidFill(type) - consume.getFluidFill(type) >= part)
 						{
-							that.setFluidFill(that.getFluidFill(type)-part, type);
+							that.setFluidFill(that.getFluidFill(type) - part, type);
 							consume.setFluidFill(consume.getFluidFill(type) + part, type);
 						} else {
 							that.setFluidFill(that.getFluidFill(type) - (consume.getMaxFluidFill(type) - consume.getFluidFill(type)), type);

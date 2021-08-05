@@ -6,9 +6,12 @@ import com.hbm.items.ModItems;
 import com.hbm.lib.Library;
 import com.hbm.potion.HbmPotion;
 
+import cpw.mods.fml.relauncher.ReflectionHelper;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.NetHandlerPlayServer;
 
 public class ArmorUtil {
 
@@ -105,6 +108,9 @@ public class ArmorUtil {
 	public static boolean checkForDigamma(EntityPlayer player) {
 		
 		if(checkArmor(player, ModItems.fau_helmet, ModItems.fau_plate, ModItems.fau_legs, ModItems.fau_boots))
+			return true;
+		
+		if(checkArmor(player, ModItems.dns_helmet, ModItems.dns_plate, ModItems.dns_legs, ModItems.dns_boots))
 			return true;
 		
 		if(player.isPotionActive(HbmPotion.stability.id))
@@ -228,6 +234,12 @@ public class ArmorUtil {
 		if(checkArmorPiece(player, ModItems.hev_helmet, 3)) {
 			return true;
 		}
+		if(checkArmorPiece(player, ModItems.fau_helmet, 3)) {
+			return true;
+		}
+		if(checkArmorPiece(player, ModItems.dns_helmet, 3)) {
+			return true;
+		}
 		if(checkArmorPiece(player, ModItems.schrabidium_helmet, 3)) {
 			return true;
 		}
@@ -257,6 +269,12 @@ public class ArmorUtil {
 		
 		if(checkArmorPiece(player, ModItems.liquidator_helmet, 3))
 			return true;
+		
+		if(checkArmorPiece(player, ModItems.fau_helmet, 3))
+			return true;
+		
+		if(checkArmorPiece(player, ModItems.dns_helmet, 3))
+			return true;
 
 		if(player.isPotionActive(HbmPotion.mutation))
 			return true;
@@ -276,6 +294,9 @@ public class ArmorUtil {
 	public static boolean checkForGoggles(EntityPlayer player) {
 
 		if(checkArmorPiece(player, ModItems.goggles, 3)) {
+			return true;
+		}
+		if(checkArmorPiece(player, ModItems.ashglasses, 3)) {
 			return true;
 		}
 		if(checkArmorPiece(player, ModItems.hazmat_helmet_red, 3)) {
@@ -305,6 +326,12 @@ public class ArmorUtil {
 		if(checkArmorPiece(player, ModItems.hev_helmet, 3)) {
 			return true;
 		}
+		if(checkArmorPiece(player, ModItems.fau_helmet, 3)) {
+			return true;
+		}
+		if(checkArmorPiece(player, ModItems.hev_helmet, 3)) {
+			return true;
+		}
 		
 		return false;
 	}
@@ -317,5 +344,13 @@ public class ArmorUtil {
 	public static boolean checkForFiend2(EntityPlayer player) {
 		
 		return checkArmorPiece(player, ModItems.jackt2, 2) && Library.checkForHeld(player, ModItems.shimmer_axe);
+	}
+	
+	public static void resetFlightTime(EntityPlayer player) {
+		
+		if(player instanceof EntityPlayerMP) {
+			EntityPlayerMP mp = (EntityPlayerMP) player;
+			ReflectionHelper.setPrivateValue(NetHandlerPlayServer.class, mp.playerNetServerHandler, 0, "floatingTickCount", "field_147365_f");
+		}
 	}
 }

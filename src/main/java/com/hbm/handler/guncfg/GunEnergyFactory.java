@@ -259,7 +259,7 @@ public class GunEnergyFactory {
 		bullet.maxAge = 200;
 		bullet.vPFX = "smoke";
 		
-		bullet.bImpact = BulletConfigFactory.getPhosphorousEffect(5, 60 * 20, 25, 0.25);
+		bullet.bImpact = BulletConfigFactory.getPhosphorousEffect(5, 60 * 20, 25, 0.25, 0.1F);
 		
 		return bullet;
 	}
@@ -378,6 +378,16 @@ public class GunEnergyFactory {
 					data.setDouble("mY", bullet.motionY - 0.2 + bullet.worldObj.rand.nextGaussian() * 0.05);
 					data.setDouble("mZ", bullet.motionZ + bullet.worldObj.rand.nextGaussian() * 0.05);
 					MainRegistry.proxy.effectNT(data);
+				} else {
+
+					int x = (int)Math.floor(bullet.posX);
+					int y = (int)Math.floor(bullet.posY);
+					int z = (int)Math.floor(bullet.posZ);
+					
+					if(bullet.worldObj.getBlock(x, y, z) == ModBlocks.volcanic_lava_block && bullet.worldObj.getBlockMetadata(x, y, z) == 0) {
+						bullet.worldObj.setBlock(x, y, z, Blocks.obsidian);
+						bullet.setDead();
+					}
 				}
 			}
 		};
@@ -584,6 +594,13 @@ public class GunEnergyFactory {
 		bullet.destroysBlocks = true;
 		bullet.doesRicochet = false;
 		
+		return bullet;
+	}
+
+	public static BulletConfiguration getTurretConfig() {
+		BulletConfiguration bullet = getFlameConfig();
+		bullet.spread *= 2F;
+		bullet.gravity = 0.0025D;
 		return bullet;
 	}
 }

@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.hbm.blocks.ModBlocks;
 import com.hbm.blocks.machine.rbmk.RBMKBase;
+import com.hbm.entity.effect.EntitySpear;
 import com.hbm.entity.projectile.EntityRBMKDebris;
 import com.hbm.entity.projectile.EntityRBMKDebris.DebrisType;
 import com.hbm.main.MainRegistry;
@@ -104,6 +105,8 @@ public abstract class TileEntityRBMKBase extends TileEntity implements INBTPacke
 			ForgeDirection.WEST
 	};
 	
+	protected TileEntityRBMKBase[] heatCache = new TileEntityRBMKBase[4];
+	
 	/**
 	 * Moves heat to neighboring parts, if possible, in a relatively fair manner
 	 */
@@ -113,12 +116,27 @@ public abstract class TileEntityRBMKBase extends TileEntity implements INBTPacke
 		rec.add(this);
 		double heatTot = this.heat;
 		
+		int index = 0;
 		for(ForgeDirection dir : heatDirs) {
 			
-			TileEntity te = worldObj.getTileEntity(xCoord + dir.offsetX, yCoord, zCoord + dir.offsetZ);
+			if(heatCache[index] != null && heatCache[index].isInvalid())
+				heatCache[index] = null;
 			
-			if(te instanceof TileEntityRBMKBase) {
-				TileEntityRBMKBase base = (TileEntityRBMKBase) te;
+			if(heatCache[index] == null) {
+				TileEntity te = worldObj.getTileEntity(xCoord + dir.offsetX, yCoord, zCoord + dir.offsetZ);
+				
+				if(te instanceof TileEntityRBMKBase) {
+					TileEntityRBMKBase base = (TileEntityRBMKBase) te;
+					heatCache[index] = base;
+				}
+			}
+			
+			index++;
+		}
+		
+		for(TileEntityRBMKBase base : heatCache) {
+			
+			if(base != null) {
 				rec.add(base);
 				heatTot += base.heat;
 			}
@@ -267,17 +285,18 @@ public abstract class TileEntityRBMKBase extends TileEntity implements INBTPacke
 	}
 	
 	protected void standardMelt(int reduce) {
-
-		reduce = MathHelper.clamp_int(reduce, 1, RBMKDials.getColumnHeight(worldObj));
+		
+		int h = RBMKDials.getColumnHeight(worldObj);
+		reduce = MathHelper.clamp_int(reduce, 1, h);
 		
 		if(worldObj.rand.nextInt(3) == 0)
 			reduce++;
 		
-		for(int i = 3; i >= 0; i--) {
+		for(int i = h; i >= 0; i--) {
 			
-			if(i <= 4 - reduce) {
+			if(i <= h + 1 - reduce) {
 				
-				if(reduce > 1 && i == 4 - reduce) {
+				if(reduce > 1 && i == h + 1 - reduce) {
 					worldObj.setBlock(xCoord, yCoord + i, zCoord, ModBlocks.pribris_burning);
 				} else {
 					worldObj.setBlock(xCoord, yCoord + i, zCoord, ModBlocks.pribris);
@@ -357,7 +376,11 @@ public abstract class TileEntityRBMKBase extends TileEntity implements INBTPacke
 							Block b = worldObj.getBlock(x, y, z);
 							
 							if(worldObj.rand.nextInt(3) == 0 && (b == ModBlocks.pribris || b == ModBlocks.pribris_burning)) {
-								worldObj.setBlock(x, y, z, ModBlocks.pribris_radiating);
+								
+								if(RBMKBase.digamma)
+									worldObj.setBlock(x, y, z, ModBlocks.pribris_digamma);
+								else
+									worldObj.setBlock(x, y, z, ModBlocks.pribris_radiating);
 							}
 						}
 					}
@@ -377,7 +400,16 @@ public abstract class TileEntityRBMKBase extends TileEntity implements INBTPacke
 		
 		worldObj.playSoundEffect(avgX + 0.5, yCoord + 1, avgZ + 0.5, "hbm:block.rbmk_explosion", 50.0F, 1.0F);
 		
+		if(RBMKBase.digamma) {
+			EntitySpear spear = new EntitySpear(worldObj);
+			spear.posX = avgX + 0.5;
+			spear.posZ = avgZ + 0.5;
+			spear.posY = yCoord + 100;
+			worldObj.spawnEntityInWorld(spear);
+		}
+		
 		RBMKBase.dropLids = true;
+		RBMKBase.digamma = false;
 	}
 	
 	private void getFF(int x, int y, int z) {
@@ -396,6 +428,10 @@ public abstract class TileEntityRBMKBase extends TileEntity implements INBTPacke
 				getFF(x, y, z - 1);
 			}
 		}
+	}
+	
+	public boolean isModerated() {
+		return false;
 	}
 	
 	public abstract ColumnType getConsoleType();

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.hbm.blocks.ModBlocks;
+import com.hbm.entity.projectile.EntityRBMKDebris.DebrisType;
 import com.hbm.handler.FluidTypeHandler.FluidType;
 import com.hbm.interfaces.IFluidAcceptor;
 import com.hbm.interfaces.IFluidSource;
@@ -217,6 +218,18 @@ public class TileEntityRBMKOutgasser extends TileEntityRBMKSlottedBase implement
 	public void clearFluidList(FluidType type) {
 		list.clear();
 	}
+	
+	@Override
+	public void onMelt(int reduce) {
+		
+		int count = 4 + worldObj.rand.nextInt(2);
+		
+		for(int i = 0; i < count; i++) {
+			spawnDebris(DebrisType.BLANK);
+		}
+		
+		super.onMelt(reduce);
+	}
 
 	@Override
 	public ColumnType getConsoleType() {
@@ -247,5 +260,20 @@ public class TileEntityRBMKOutgasser extends TileEntityRBMKSlottedBase implement
 		
 		nbt.setDouble("progress", this.progress);
 		this.gas.writeToNBT(nbt, "gas");
+	}
+
+	@Override
+	public boolean isItemValidForSlot(int i, ItemStack itemStack) {
+		return getOutput(itemStack) != null && i == 0;
+	}
+
+	@Override
+	public boolean canExtractItem(int i, ItemStack itemStack, int j) {
+		return i == 1;
+	}
+
+	@Override
+	public int[] getAccessibleSlotsFromSide(int p_94128_1_) {
+		return new int[] {0, 1};
 	}
 }

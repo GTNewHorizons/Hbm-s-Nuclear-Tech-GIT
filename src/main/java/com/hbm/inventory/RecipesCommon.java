@@ -1,5 +1,6 @@
 package com.hbm.inventory;
 
+import java.util.Arrays;
 import java.util.List;
 
 import net.minecraft.block.Block;
@@ -52,6 +53,8 @@ public class RecipesCommon {
 		
 		/*
 		 * Is it unprofessional to pool around in child classes from an abstract superclass? Do I look like I give a shit?
+		 * 
+		 * Major fuckup: comparablestacks need EQUAL stacksize but the oredictstack ignores stack size entirely
 		 */
 		public boolean isApplicable(ComparableStack comp) {
 			
@@ -72,9 +75,21 @@ public class RecipesCommon {
 			return false;
 		}
 		
-		public abstract boolean matchesRecipe(ItemStack stack);
+		/**
+		 * Whether the supplied itemstack is applicable for a recipe (e.g. anvils). Slightly different from {@code isApplicable}.
+		 * @param stack the ItemStack to check
+		 * @param ignoreSize whether size should be ignored entirely or if the ItemStack needs to be >at least< the same size as this' size
+		 * @return
+		 */
+		public abstract boolean matchesRecipe(ItemStack stack, boolean ignoreSize);
 		
 		public abstract AStack copy();
+		
+		/**
+		 * Generates either an ItemStack or an ArrayList of ItemStacks
+		 * @return
+		 */
+		public abstract List<ItemStack> extractForNEI();
 	}
 	
 	public static class ComparableStack extends AStack {
@@ -216,7 +231,7 @@ public class RecipesCommon {
 		}
 
 		@Override
-		public boolean matchesRecipe(ItemStack stack) {
+		public boolean matchesRecipe(ItemStack stack, boolean ignoreSize) {
 			
 			if(stack == null)
 				return false;
@@ -227,10 +242,15 @@ public class RecipesCommon {
 			if(this.meta != OreDictionary.WILDCARD_VALUE && stack.getItemDamage() != this.meta)
 				return false;
 			
-			if(stack.stackSize < this.stacksize)
+			if(!ignoreSize && stack.stackSize < this.stacksize)
 				return false;
 			
-			return false;
+			return true;
+		}
+
+		@Override
+		public List<ItemStack> extractForNEI() {
+			return Arrays.asList(new ItemStack[] {this.toStack()});
 		}
 	}
 	
@@ -323,9 +343,12 @@ public class RecipesCommon {
 		}
 
 		@Override
-		public boolean matchesRecipe(ItemStack stack) {
+		public boolean matchesRecipe(ItemStack stack, boolean ignoreSize) {
 			
 			if(stack == null)
+				return false;
+			
+			if(!ignoreSize && stack.stackSize < this.stacksize)
 				return false;
 			
 			int[] ids = OreDictionary.getOreIDs(stack);
@@ -339,6 +362,17 @@ public class RecipesCommon {
 			}
 			
 			return false;
+		}
+
+		@Override
+		public List<ItemStack> extractForNEI() {
+			
+			List<ItemStack> ores = OreDictionary.getOres(name);
+			
+			for(ItemStack stack : ores)
+				stack.stackSize = this.stacksize;
+			
+			return ores;
 		}
 	}
 	

@@ -26,6 +26,8 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 	private int targetY;
 	private int targetZ;
 	
+	public int[] fluxBuffer = new int[20];
+	
 	//made this one-dimensional because it's a lot easier to serialize
 	public RBMKColumn[] columns = new RBMKColumn[15 * 15];
 
@@ -52,6 +54,8 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 	
 	private void rescan() {
 		
+		double flux = 0;
+		
 		for(int i = -7; i <= 7; i++) {
 			for(int j = -7; j <= 7; j++) {
 				
@@ -65,12 +69,24 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 					columns[index] = new RBMKColumn(rbmk.getConsoleType(), rbmk.getNBTForConsole());
 					columns[index].data.setDouble("heat", rbmk.heat);
 					columns[index].data.setDouble("maxHeat", rbmk.maxHeat());
+					if(rbmk.isModerated()) columns[index].data.setBoolean("moderated", true); //false is the default anyway and not setting it when we don't need to reduces cruft
+					
+					if(te instanceof TileEntityRBMKRod) {
+						TileEntityRBMKRod fuel = (TileEntityRBMKRod) te;
+						flux += fuel.fluxFast + fuel.fluxSlow;
+					}
 					
 				} else {
 					columns[index] = null;
 				}
 			}
 		}
+		
+		for(int i = 0; i < this.fluxBuffer.length - 1; i++) {
+			this.fluxBuffer[i] = this.fluxBuffer[i + 1];
+		}
+		
+		this.fluxBuffer[19] = (int) flux;
 	}
 	
 	private void prepareNetworkPack() {
@@ -84,6 +100,8 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 				data.setShort("type_" + i, (short)this.columns[i].type.ordinal());
 			}
 		}
+		
+		data.setIntArray("flux", this.fluxBuffer);
 		
 		this.networkPack(data, 50);
 	}
@@ -99,6 +117,8 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 				this.columns[i] = new RBMKColumn(ColumnType.values()[data.getShort("type_" + i)], (NBTTagCompound)data.getTag("column_" + i));
 			}
 		}
+		
+		this.fluxBuffer = data.getIntArray("flux");
 	}
 
 	@Override
@@ -205,8 +225,9 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 			List<String> stats = new ArrayList();
 			stats.add(EnumChatFormatting.YELLOW + I18nUtil.resolveKey("rbmk.heat", ((int)((this.data.getDouble("heat") * 10D)) / 10D) + "°C"));
 			switch(this.type) {
-			
+
 			case FUEL:
+			case FUEL_SIM:
 				stats.add(EnumChatFormatting.GREEN + I18nUtil.resolveKey("rbmk.rod.depletion", ((int)(((1D - this.data.getDouble("enrichment")) * 100000)) / 1000D) + "%"));
 				stats.add(EnumChatFormatting.DARK_PURPLE + I18nUtil.resolveKey("rbmk.rod.xenon", ((int)(((this.data.getDouble("xenon")) * 1000D)) / 1000D) + "%"));
 				stats.add(EnumChatFormatting.DARK_RED + I18nUtil.resolveKey("rbmk.rod.coreTemp", ((int)((this.data.getDouble("c_coreHeat") * 10D)) / 10D) + "°C"));
@@ -231,6 +252,9 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 				break;
 			}
 			
+			if(data.getBoolean("moderated"))
+				stats.add(EnumChatFormatting.YELLOW + I18nUtil.resolveKey("rbmk.moderated"));
+			
 			return stats;
 		}
 	}
@@ -238,6 +262,7 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 	public static enum ColumnType {
 		BLANK(0),
 		FUEL(10),
+		FUEL_SIM(90),
 		CONTROL(20),
 		CONTROL_AUTO(30),
 		BOILER(40),
@@ -245,7 +270,7 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 		ABSORBER(60),
 		REFLECTOR(70),
 		OUTGASSER(80),
-		BREEDER(90);
+		BREEDER(100);
 		
 		public int offset;
 		

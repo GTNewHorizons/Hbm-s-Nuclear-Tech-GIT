@@ -34,8 +34,6 @@ import com.hbm.world.feature.Sellafield;
 import com.hbm.world.generator.CellularDungeonFactory;
 import com.hbm.world.generator.DungeonToolbox;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityChest;
@@ -46,14 +44,12 @@ import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.gen.NoiseGeneratorOctaves;
 import net.minecraft.world.gen.feature.WorldGenMinable;
-import net.minecraftforge.common.util.ForgeDirection;
 import cpw.mods.fml.common.IWorldGenerator;
 
 public class HbmWorldGen implements IWorldGenerator {
 
 	@Override
-	public void generate(Random rand, int chunkX, int chunkZ, World world, IChunkProvider chunkGenerator,
-			IChunkProvider chunkProvider) {
+	public void generate(Random rand, int chunkX, int chunkZ, World world, IChunkProvider chunkGenerator, IChunkProvider chunkProvider) {
 		switch (world.provider.dimensionId) {
 		case -1:
 			generateNether(world, rand, chunkX * 16, chunkZ * 16); break;
@@ -65,65 +61,11 @@ public class HbmWorldGen implements IWorldGenerator {
 			if(GeneralConfig.enableMDOres)
 				generateSurface(world, rand, chunkX * 16, chunkZ * 16); break;
 		}
-
 	}
 	
 	NoiseGeneratorOctaves octaves = new NoiseGeneratorOctaves(new Random(0x706f6e6379756dL), 1);
-	
-	/**
-	 * Fake noise generator "unruh" ("unrest", the motion of a clockwork), using a bunch of layered, scaled and offset
-	 * sine functions to simulate a simple noise generator that runs somewhat efficiently
-	 * @param long the random function seed used for this operation
-	 * @param x the exact x-coord of the height you want
-	 * @param z the exact z-coord of the height you want
-	 * @param scale how much the x/z coords should be amplified
-	 * @param depth the resolution of the operation, higher numbers call more sine functions
-	 * @return the height value
-	 */
-	private double generateUnruh(long seed, int x, int z, double scale, int depth) {
-		
-		scale = 1/scale;
-		
-		double result = 1;
-		
-		Random rand = new Random(seed);
-		
-		for(int i = 0; i < depth; i++) {
-
-			double offsetX = rand.nextDouble() * Math.PI * 2;
-			double offsetZ = rand.nextDouble() * Math.PI * 2;
-			
-			result += Math.sin(x / Math.pow(2, depth) * scale + offsetX) * Math.sin(z / Math.pow(2, depth) * scale + offsetZ);
-		}
-		
-		return result / depth;
-	}
 
 	private void generateSurface(World world, Random rand, int i, int j) {
-		
-		for(int x = 0; x < 16; x++) {
-			
-			for(int z = 0; z < 16; z++) {
-				
-				double unruh = Math.abs(generateUnruh(world.getSeed(), i + x, j + z, 4, 4)) * 1.5;
-				double thresh = 0.8D;
-				
-				if(unruh >= thresh) {
-					
-					int span = (int)(Math.floor((unruh - thresh) * 7));
-					
-					for(int s = -span; s <= span; s++) {
-						
-						int y = 35 + s;
-						
-						Block b = world.getBlock(x, y, z);
-						
-						if(b.getMaterial() == Material.rock || b == Blocks.dirt)
-							world.setBlock(i + x, (int) (y), j + z, ModBlocks.stone_gneiss, 0, 2);
-					}
-				}
-			}
-		}
 
 		DungeonToolbox.generateOre(world, rand, i, j, 25, 6, 30, 10, ModBlocks.ore_gneiss_iron, ModBlocks.stone_gneiss);
 		DungeonToolbox.generateOre(world, rand, i, j, 10, 6, 30, 10, ModBlocks.ore_gneiss_gold, ModBlocks.stone_gneiss);
@@ -148,7 +90,8 @@ public class HbmWorldGen implements IWorldGenerator {
 		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.rareSpawn, 5, 5, 20, ModBlocks.ore_rare);
 		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.ligniteSpawn, 24, 35, 25, ModBlocks.ore_lignite);
 		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.asbestosSpawn, 4, 16, 16, ModBlocks.ore_asbestos);
-		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.cinnebarSpawn, 2, 8, 8, ModBlocks.ore_asbestos);
+		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.cinnebarSpawn, 4, 8, 16, ModBlocks.ore_cinnebar);
+		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.cobaltSpawn, 4, 4, 8, ModBlocks.ore_cobalt);
 
 		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.ironClusterSpawn, 6, 5, 50, ModBlocks.cluster_iron);
 		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.titaniumClusterSpawn, 6, 5, 30, ModBlocks.cluster_titanium);
@@ -160,11 +103,30 @@ public class HbmWorldGen implements IWorldGenerator {
 		if(WorldConfig.gasbubbleSpawn > 0 && rand.nextInt(WorldConfig.gasbubbleSpawn) == 0)
 			DungeonToolbox.generateOre(world, rand, i, j, 1, 32, 30, 10, ModBlocks.gas_flammable);
 
-		DepthDeposit.generateCondition(world, i, 0, 3, j, 5, 0.6D, ModBlocks.cluster_depth_iron, rand, 24);
-		DepthDeposit.generateCondition(world, i, 0, 3, j, 5, 0.6D, ModBlocks.cluster_depth_titanium, rand, 32);
-		DepthDeposit.generateCondition(world, i, 0, 3, j, 5, 0.6D, ModBlocks.cluster_depth_tungsten, rand, 32);
-		DepthDeposit.generateCondition(world, i, 0, 3, j, 5, 0.8D, ModBlocks.ore_depth_cinnebar, rand, 16);
-		DepthDeposit.generateCondition(world, i, 0, 3, j, 5, 0.8D, ModBlocks.ore_depth_zirconium, rand, 16);
+		DepthDeposit.generateConditionOverworld(world, i, 0, 3, j, 5, 0.6D, ModBlocks.cluster_depth_iron, rand, 24);
+		DepthDeposit.generateConditionOverworld(world, i, 0, 3, j, 5, 0.6D, ModBlocks.cluster_depth_titanium, rand, 32);
+		DepthDeposit.generateConditionOverworld(world, i, 0, 3, j, 5, 0.6D, ModBlocks.cluster_depth_tungsten, rand, 32);
+		DepthDeposit.generateConditionOverworld(world, i, 0, 3, j, 5, 0.8D, ModBlocks.ore_depth_cinnebar, rand, 16);
+		DepthDeposit.generateConditionOverworld(world, i, 0, 3, j, 5, 0.8D, ModBlocks.ore_depth_zirconium, rand, 16);
+
+		Random colRand = new Random(world.getSeed() + 5);
+		int colX = (int) (colRand.nextGaussian() * 1500);
+		int colZ = (int) (colRand.nextGaussian() * 1500);
+		int colRange = 500;
+		
+		for (int k = 0; k < 2; k++) {
+			
+			for(int r = 1; r <= 5; r++) {
+				int randPosX = i + rand.nextInt(16);
+				int randPosY = rand.nextInt(25) + 15;
+				int randPosZ = j + rand.nextInt(16);
+				
+				int range = colRange / r;
+	
+				if(randPosX <= colX + range && randPosX >= colX - range && randPosZ <= colZ + range && randPosZ >= colZ - range)
+					(new WorldGenMinable(ModBlocks.ore_coltan, 4)).generate(world, rand, randPosX, randPosY, randPosZ);
+			}
+		}
 
 		for (int k = 0; k < rand.nextInt(4); k++) {
 			int randPosX = i + rand.nextInt(16);
@@ -175,7 +137,7 @@ public class HbmWorldGen implements IWorldGenerator {
 				(new WorldGenMinable(ModBlocks.ore_australium, 50)).generate(world, rand, randPosX, randPosY, randPosZ);
 		}
 
-		if (GeneralConfig.enableDungeons) {
+		if (GeneralConfig.enableDungeons && world.provider.isSurfaceWorld()) {
 
 			BiomeGenBase biome = world.getWorldChunkManager().getBiomeGenAt(i, j);
 
@@ -639,9 +601,13 @@ public class HbmWorldGen implements IWorldGenerator {
 		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.netherSulfurSpawn, 12, 0, 127, ModBlocks.ore_nether_sulfur, Blocks.netherrack);
 		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.netherPhosphorusSpawn, 6, 0, 127, ModBlocks.ore_nether_fire, Blocks.netherrack);
 		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.netherCoalSpawn, 32, 16, 96, ModBlocks.ore_nether_coal, Blocks.netherrack);
+		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.netherCobaltSpawn, 6, 100, 26, ModBlocks.ore_nether_cobalt, Blocks.netherrack);
 		
 		if(GeneralConfig.enablePlutoniumOre)
 			DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.netherPlutoniumSpawn, 4, 0, 127, ModBlocks.ore_nether_plutonium, Blocks.netherrack);
+
+		DepthDeposit.generateConditionNether(world, i, 0, 3, j, 7, 0.6D, ModBlocks.ore_depth_nether_neodymium, rand, 16);
+		DepthDeposit.generateConditionNether(world, i, 125, 3, j, 7, 0.6D, ModBlocks.ore_depth_nether_neodymium, rand, 16);
 
 		for(int k = 0; k < 30; k++){
 			int x = i + rand.nextInt(16);
@@ -667,7 +633,7 @@ public class HbmWorldGen implements IWorldGenerator {
 	private void generateEnd(World world, Random rand, int i, int j) {
 		DungeonToolbox.generateOre(world, rand, i, j, WorldConfig.endTikiteSpawn, 6, 0, 127, ModBlocks.ore_tikite, Blocks.end_stone);
 
-		for(int k = 0; k < 50; k++){
+		/*for(int k = 0; k < 50; k++){
 			int x = i + rand.nextInt(16);
 			int z = j + rand.nextInt(16);
 			int d = 5 + rand.nextInt(60);
@@ -675,7 +641,7 @@ public class HbmWorldGen implements IWorldGenerator {
 			for(int y = d - 5; y <= d; y++)
 				if(world.getBlock(x, y, z) == Blocks.air && world.getBlock(x, y + 1, z).isSideSolid(world, x, y, z, ForgeDirection.DOWN))
 					world.setBlock(x, y, z, ModBlocks.crystal_trixite);
-		}
+		}*/
 	}
 
 }

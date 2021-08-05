@@ -97,6 +97,9 @@ public class BulletConfigSyncingUtil {
 	public static int BMG50_STAR = i++;
 	public static int BMG50_PHOSPHORUS = i++;
 	public static int BMG50_SLEEK = i++;
+	public static int BMG50_FLECHETTE_NORMAL = i++;
+	public static int BMG50_FLECHETTE_AM = i++;
+	public static int BMG50_FLECHETTE_PO = i++;
 
 	public static int R5_NORMAL = i++;
 	public static int R5_EXPLOSIVE = i++;
@@ -162,6 +165,7 @@ public class BulletConfigSyncingUtil {
 	public static int B75_HE = i++;
 
 	public static int NEEDLE_GPS = i++;
+	public static int NEEDLE_NUKE = i++;
 	public static int DART_NORMAL = i++;
 
 	public static int G20_NORMAL_FIRE = i++;
@@ -191,6 +195,7 @@ public class BulletConfigSyncingUtil {
 	public static int SHELL_DU = i++;
 	public static int SHELL_W9 = i++;
 	public static int DGK_NORMAL = i++;
+	public static int FLA_NORMAL = i++;
 
 	public static int NUKE_NORMAL = i++;
 	public static int NUKE_LOW = i++;
@@ -326,6 +331,9 @@ public class BulletConfigSyncingUtil {
 		configSet.put(BMG50_DU, Gun50BMGFactory.get50BMGDUConfig());
 		configSet.put(BMG50_STAR, Gun50BMGFactory.get50BMGStarConfig());
 		configSet.put(BMG50_SLEEK, Gun50BMGFactory.get50BMGSleekConfig());
+		configSet.put(BMG50_FLECHETTE_NORMAL, Gun50BMGFactory.get50BMGFlechetteConfig());
+		configSet.put(BMG50_FLECHETTE_AM, Gun50BMGFactory.get50BMGFlechetteAMConfig());
+		configSet.put(BMG50_FLECHETTE_PO, Gun50BMGFactory.get50BMGFlechettePOConfig());
 
 		configSet.put(R5_NORMAL, Gun5mmFactory.get5mmConfig());
 		configSet.put(R5_EXPLOSIVE, Gun5mmFactory.get5mmExplosiveConfig());
@@ -391,6 +399,7 @@ public class BulletConfigSyncingUtil {
 		configSet.put(B75_HE, Gun75BoltFactory.get75BoltHEConfig());
 
 		configSet.put(NEEDLE_GPS, GunDartFactory.getGPSConfig());
+		configSet.put(NEEDLE_NUKE, GunDartFactory.getNukeConfig());
 		configSet.put(DART_NORMAL, GunDartFactory.getNERFConfig());
 
 		configSet.put(G20_NORMAL_FIRE, Gun20GaugeFactory.get20GaugeConfig().setToFire(3));
@@ -420,6 +429,7 @@ public class BulletConfigSyncingUtil {
 		configSet.put(SHELL_DU, GunCannonFactory.getShellDUConfig());
 		configSet.put(SHELL_W9, GunCannonFactory.getShellW9Config());
 		configSet.put(DGK_NORMAL, GunDGKFactory.getDGKConfig());
+		configSet.put(FLA_NORMAL, GunEnergyFactory.getTurretConfig());
 
 		configSet.put(NUKE_NORMAL, GunFatmanFactory.getNukeConfig());
 		configSet.put(NUKE_LOW, GunFatmanFactory.getNukeLowConfig());

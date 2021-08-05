@@ -180,9 +180,9 @@ public class MachineRecipes {
 			return list;
 		case WATZ:
 			list.add(new GasCentOutput(1, new ItemStack(ModItems.nugget_solinium), 1));
-			list.add(new GasCentOutput(1, new ItemStack(ModItems.nugget_uranium), 1));
-			list.add(new GasCentOutput(5, new ItemStack(ModItems.powder_lead), 1));
-			list.add(new GasCentOutput(10, new ItemStack(ModItems.dust), 1));
+			list.add(new GasCentOutput(1, new ItemStack(ModItems.nugget_uranium), 2));
+			list.add(new GasCentOutput(5, new ItemStack(ModItems.powder_lead), 3));
+			list.add(new GasCentOutput(10, new ItemStack(ModItems.dust), 4));
 			return list;
 		case SAS3:
 			list.add(new GasCentOutput(4, new ItemStack(ModItems.nugget_schrabidium), 1));
@@ -404,6 +404,8 @@ public class MachineRecipes {
 				return new ItemStack(ModItems.circuit_aluminium);
 			if(input.getItem() == ModItems.circuit_bismuth_raw)
 				return new ItemStack(ModItems.circuit_bismuth);
+			if(input.getItem() == ModItems.circuit_tantalium_raw)
+				return new ItemStack(ModItems.circuit_tantalium);
 		}
 		
 		if(stamp.getItem() == ModItems.stamp_357) {
@@ -516,6 +518,7 @@ public class MachineRecipes {
 
 		recipes.put(new Object[] { i_stamps_circuit, new ItemStack(ModItems.circuit_raw) }, getPressResultNN(stamps_circuit.get(0), ModItems.circuit_raw));
 		recipes.put(new Object[] { i_stamps_circuit, new ItemStack(ModItems.circuit_bismuth_raw) }, getPressResultNN(stamps_circuit.get(0), ModItems.circuit_bismuth_raw));
+		recipes.put(new Object[] { i_stamps_circuit, new ItemStack(ModItems.circuit_tantalium_raw) }, getPressResultNN(stamps_circuit.get(0), ModItems.circuit_tantalium_raw));
 
 		recipes.put(new Object[] { i_stamps_357, new ItemStack(ModItems.assembly_iron) }, getPressResultNN(i_stamps_357.get(0).getItem(), ModItems.assembly_iron));
 		recipes.put(new Object[] { i_stamps_357, new ItemStack(ModItems.assembly_steel) }, getPressResultNN(i_stamps_357.get(0).getItem(), ModItems.assembly_steel));
@@ -1478,6 +1481,7 @@ public class MachineRecipes {
 		fuels.add(new ItemStack(ModItems.blades_steel));
 		fuels.add(new ItemStack(ModItems.blades_titanium));
 		fuels.add(new ItemStack(ModItems.blades_schrabidium));
+		fuels.add(new ItemStack(ModItems.blades_desh));
 		return fuels;
 	}
 	
@@ -1754,6 +1758,14 @@ public class MachineRecipes {
         case SCHRABIDATE:
 			list.add(new ItemStack(ModItems.powder_iron, 1));
 			break;
+        case COLTAN_CLEANING:
+			list.add(new ItemStack(ModItems.powder_coltan_ore, 2));
+			list.add(new ItemStack(ModItems.powder_coal, 1));
+			break;
+        case COLTAN_PAIN:
+			list.add(new ItemStack(ModItems.powder_coltan, 1));
+			list.add(new ItemStack(ModItems.fluorite, 1));
+			break;
 		default:
 			break;
 		}
@@ -1973,6 +1985,18 @@ public class MachineRecipes {
     	case SCHRABIDATE:
 			input[0] = new FluidStack(250, FluidType.SCHRABIDIC);
         	break;
+    	case COLTAN_CLEANING:
+			input[0] = new FluidStack(250, FluidType.ACID);
+			input[1] = new FluidStack(500, FluidType.HYDROGEN);
+        	break;
+    	case COLTAN_PAIN:
+			input[0] = new FluidStack(1000, FluidType.GAS);
+			input[1] = new FluidStack(500, FluidType.OXYGEN);
+        	break;
+    	case COLTAN_CRYSTAL:
+			input[0] = new FluidStack(1000, FluidType.PAIN);
+			input[1] = new FluidStack(500, FluidType.ACID);
+        	break;
 		default:
 			break;
 		}
@@ -2114,6 +2138,14 @@ public class MachineRecipes {
         case SCHRABIDATE:
 			output[0] = new ItemStack(ModItems.powder_schrabidate, 1);
         	break;
+        case COLTAN_CLEANING:
+			output[0] = new ItemStack(ModItems.powder_coltan, 1);
+			output[1] = new ItemStack(ModItems.dust, 2);
+        	break;
+        case COLTAN_CRYSTAL:
+			output[0] = new ItemStack(ModItems.gem_tantalium, 1);
+			output[1] = new ItemStack(ModItems.dust, 3);
+        	break;
 		default:
 			break;
 		}
@@ -2242,6 +2274,15 @@ public class MachineRecipes {
         	break;
         case SCHRABIDIC:
 			output[0] = new FluidStack(16000, FluidType.SCHRABIDIC);
+        	break;
+        case COLTAN_CLEANING:
+			output[0] = new FluidStack(500, FluidType.WATER);
+        	break;
+        case COLTAN_PAIN:
+			output[0] = new FluidStack(1000, FluidType.PAIN);
+        	break;
+        case COLTAN_CRYSTAL:
+			output[0] = new FluidStack(250, FluidType.WATER);
         	break;
 		default:
 			break;

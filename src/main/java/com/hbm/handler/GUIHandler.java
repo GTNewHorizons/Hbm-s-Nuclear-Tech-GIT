@@ -264,7 +264,7 @@ public class GUIHandler implements IGuiHandler {
 
 		case ModBlocks.guiID_machine_teleporter: {
 			if(entity instanceof TileEntityMachineTeleporter) {
-				return new ContainerMachineTeleporter(player.inventory, (TileEntityMachineTeleporter) entity);
+			//	return new ContainerMachineTeleporter(player.inventory, (TileEntityMachineTeleporter) entity);
 			}
 			return null;
 		}
@@ -815,13 +815,6 @@ public class GUIHandler implements IGuiHandler {
 			return null;
 		}
 
-		case ModBlocks.guiID_rbmk_console: {
-			if(entity instanceof TileEntityRBMKConsole) {
-				return new ContainerRBMKConsole(player.inventory, (TileEntityRBMKConsole) entity);
-			}
-			return null;
-		}
-
 		case ModBlocks.guiID_storage_drum: {
 			if(entity instanceof TileEntityStorageDrum) {
 				return new ContainerStorageDrum(player.inventory, (TileEntityStorageDrum) entity);
@@ -845,7 +838,14 @@ public class GUIHandler implements IGuiHandler {
 
 		case ModBlocks.guiID_anvil: {
 			if(world.getBlock(x, y, z) instanceof NTMAnvil) {
-				return new ContainerAnvil(player.inventory);
+				return new ContainerAnvil(player.inventory, ((NTMAnvil)world.getBlock(x, y, z)).tier);
+			}
+			return null;
+		}
+
+		case ModBlocks.guiID_fritz: {
+			if(entity instanceof TileEntityTurretFritz) {
+				return new ContainerTurretBase(player.inventory, (TileEntityTurretFritz) entity);
 			}
 			return null;
 		}
@@ -1680,7 +1680,14 @@ public class GUIHandler implements IGuiHandler {
 
 		case ModBlocks.guiID_anvil: {
 			if(world.getBlock(x, y, z) instanceof NTMAnvil) {
-				return new GUIAnvil(player.inventory);
+				return new GUIAnvil(player.inventory, ((NTMAnvil)world.getBlock(x, y, z)).tier);
+			}
+			return null;
+		}
+
+		case ModBlocks.guiID_fritz: {
+			if(entity instanceof TileEntityTurretFritz) {
+				return new GUITurretFritz(player.inventory, (TileEntityTurretFritz) entity);
 			}
 			return null;
 		}

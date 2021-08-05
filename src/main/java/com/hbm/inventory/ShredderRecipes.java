@@ -7,6 +7,7 @@ import java.util.Map;
 import com.hbm.blocks.ModBlocks;
 import com.hbm.inventory.RecipesCommon.ComparableStack;
 import com.hbm.items.ModItems;
+import com.hbm.main.MainRegistry;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -44,7 +45,10 @@ public class ShredderRecipes {
 				if(dust != null && dust.getItem() != ModItems.scrap) {
 
 					for(ItemStack stack : matches) {
-						shredderRecipes.put(new ComparableStack(stack), dust);
+						if(stack != null)
+							shredderRecipes.put(new ComparableStack(stack), dust);
+						else
+							MainRegistry.logger.error("Ore dict entry '" + name + "' has a null stack!");
 					}
 				}
 			} else if(name.length() > 3 && name.substring(0, 3).equals("ore")) {
@@ -55,7 +59,10 @@ public class ShredderRecipes {
 					dust.stackSize = 2;
 
 					for(ItemStack stack : matches) {
-						shredderRecipes.put(new ComparableStack(stack), dust);
+						if(stack != null)
+							shredderRecipes.put(new ComparableStack(stack), dust);
+						else
+							MainRegistry.logger.error("Ore dict entry '" + name + "' has a null stack!");
 					}
 				}
 			} else if(name.length() > 5 && name.substring(0, 5).equals("block")) {
@@ -66,7 +73,10 @@ public class ShredderRecipes {
 					dust.stackSize = 9;
 
 					for(ItemStack stack : matches) {
-						shredderRecipes.put(new ComparableStack(stack), dust);
+						if(stack != null)
+							shredderRecipes.put(new ComparableStack(stack), dust);
+						else
+							MainRegistry.logger.error("Ore dict entry '" + name + "' has a null stack!");
 					}
 				}
 			} else if(name.length() > 3 && name.substring(0, 3).equals("gem")) {
@@ -75,13 +85,31 @@ public class ShredderRecipes {
 				if(dust != null && dust.getItem() != ModItems.scrap) {
 
 					for(ItemStack stack : matches) {
-						shredderRecipes.put(new ComparableStack(stack), dust);
+						if(stack != null)
+							shredderRecipes.put(new ComparableStack(stack), dust);
+						else
+							MainRegistry.logger.error("Ore dict entry '" + name + "' has a null stack!");
+					}
+				}
+			} else if(name.length() > 7 && name.substring(0, 7).equals("crystal")) {
+				ItemStack dust = getDustByName(name.substring(7));
+				
+				if(dust != null && dust.getItem() != ModItems.scrap) {
+
+					for(ItemStack stack : matches) {
+						if(stack != null)
+							shredderRecipes.put(new ComparableStack(stack), dust);
+						else
+							MainRegistry.logger.error("Ore dict entry '" + name + "' has a null stack!");
 					}
 				}
 			} else if(name.length() > 3 && name.substring(0, 4).equals("dust")) {
 
 				for(ItemStack stack : matches) {
-					shredderRecipes.put(new ComparableStack(stack), new ItemStack(ModItems.dust));
+					if(stack != null)
+						shredderRecipes.put(new ComparableStack(stack), new ItemStack(ModItems.dust));
+					else
+						MainRegistry.logger.error("Ore dict entry '" + name + "' has a null stack!");
 				}
 			}
 		}
@@ -179,6 +207,7 @@ public class ShredderRecipes {
 		ShredderRecipes.setRecipe(ModItems.crystal_trixite, new ItemStack(ModItems.powder_plutonium, 6));
 		ShredderRecipes.setRecipe(ModItems.crystal_lithium, new ItemStack(ModItems.powder_lithium, 3));
 		ShredderRecipes.setRecipe(ModItems.crystal_starmetal, new ItemStack(ModItems.powder_dura_steel, 6));
+		ShredderRecipes.setRecipe(ModItems.crystal_cobalt, new ItemStack(ModItems.powder_cobalt, 3));
 
 		ShredderRecipes.setRecipe(ModBlocks.steel_poles, new ItemStack(ModItems.powder_steel_tiny, 3));
 		ShredderRecipes.setRecipe(ModBlocks.pole_top, new ItemStack(ModItems.powder_tungsten, 4));
@@ -203,6 +232,7 @@ public class ShredderRecipes {
 		ShredderRecipes.setRecipe(Blocks.anvil, new ItemStack(ModItems.powder_iron, 31));
 		ShredderRecipes.setRecipe(ModBlocks.chain, new ItemStack(ModItems.powder_steel_tiny, 1));
 		ShredderRecipes.setRecipe(ModBlocks.steel_grate, new ItemStack(ModItems.powder_steel_tiny, 3));
+		ShredderRecipes.setRecipe(ModItems.pipes_steel, new ItemStack(ModItems.powder_steel, 27));
 
 		ShredderRecipes.setRecipe(ModBlocks.deco_pipe, new ItemStack(ModItems.powder_steel, 1));
 		ShredderRecipes.setRecipe(ModBlocks.deco_pipe_rusted, new ItemStack(ModItems.powder_steel, 1));

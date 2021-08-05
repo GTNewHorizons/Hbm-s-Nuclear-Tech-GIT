@@ -75,6 +75,7 @@ import com.hbm.tileentity.machine.*;
 import com.hbm.tileentity.machine.TileEntityMachineReactorLarge.ReactorFuelType;
 import com.hbm.tileentity.machine.rbmk.*;
 import com.hbm.tileentity.turret.*;
+import com.hbm.world.feature.SchistStratum;
 import com.hbm.world.generator.CellularDungeonFactory;
 
 import cpw.mods.fml.common.SidedProxy;
@@ -85,6 +86,7 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.Side;
 
 @Mod(modid = RefStrings.MODID, name = RefStrings.NAME, version = RefStrings.VERSION)
 public class MainRegistry {
@@ -470,6 +472,8 @@ public class MainRegistry {
 		GameRegistry.registerTileEntity(TileEntityTurretRichard.class, "tileentity_turret_richard");
 		GameRegistry.registerTileEntity(TileEntityTurretHoward.class, "tileentity_turret_howard");
 		GameRegistry.registerTileEntity(TileEntityTurretMaxwell.class, "tileentity_turret_maxwell");
+		GameRegistry.registerTileEntity(TileEntityTurretFritz.class, "tileentity_turret_fritz");
+		GameRegistry.registerTileEntity(TileEntityTurretBrandon.class, "tileentity_turret_brandon");
 		GameRegistry.registerTileEntity(TileEntitySILEX.class, "tileentity_silex");
 		GameRegistry.registerTileEntity(TileEntityFEL.class, "tileentity_fel");
 		GameRegistry.registerTileEntity(TileEntityDemonLamp.class, "tileentity_demonlamp");
@@ -478,6 +482,7 @@ public class MainRegistry {
 		GameRegistry.registerTileEntity(TileEntityChungus.class, "tileentity_chungus");
 
 		GameRegistry.registerTileEntity(TileEntityRBMKRod.class, "tileentity_rbmk_rod");
+		GameRegistry.registerTileEntity(TileEntityRBMKRodReaSim.class, "tileentity_rbmk_rod_reasim");
 		GameRegistry.registerTileEntity(TileEntityRBMKControlManual.class, "tileentity_rbmk_control");
 		GameRegistry.registerTileEntity(TileEntityRBMKControlAuto.class, "tileentity_rbmk_control_auto");
 		GameRegistry.registerTileEntity(TileEntityRBMKBlank.class, "tileentity_rbmk_blank");
@@ -487,6 +492,8 @@ public class MainRegistry {
 		GameRegistry.registerTileEntity(TileEntityRBMKModerator.class, "tileentity_rbmk_moderator");
 		GameRegistry.registerTileEntity(TileEntityRBMKOutgasser.class, "tileentity_rbmk_outgasser");
 		GameRegistry.registerTileEntity(TileEntityRBMKConsole.class, "tileentity_rbmk_console");
+		GameRegistry.registerTileEntity(TileEntityRBMKInlet.class, "tileentity_rbmk_inlet");
+		GameRegistry.registerTileEntity(TileEntityRBMKOutlet.class, "tileentity_rbmk_outlet");
 
 		EntityRegistry.registerModEntity(EntityRocket.class, "entity_rocket", 0, this, 250, 1, true);
 		EntityRegistry.registerModEntity(EntityNukeExplosion.class, "entity_nuke_explosion", 1, this, 250, 1, true);
@@ -644,6 +651,7 @@ public class MainRegistry {
 		EntityRegistry.registerModEntity(EntityNukeExplosionNT.class, "entity_ntm_explosion_nt", 156, this, 1000, 1, true);
 		EntityRegistry.registerModEntity(EntityQuasar.class, "entity_digamma_quasar", 157, this, 250, 1, true);
 		EntityRegistry.registerModEntity(EntitySpear.class, "entity_digamma_spear", 158, this, 1000, 1, true);
+		EntityRegistry.registerModEntity(EntityMissileVolcano.class, "entity_missile_volcano", 159, this, 1000, 1, true);
 
 		EntityRegistry.registerGlobalEntityID(EntityNuclearCreeper.class, "entity_mob_nuclear_creeper", EntityRegistry.findGlobalUniqueEntityId(), 0x204131, 0x75CE00);
 		EntityRegistry.registerGlobalEntityID(EntityTaintedCreeper.class, "entity_mob_tainted_creeper", EntityRegistry.findGlobalUniqueEntityId(), 0x813b9b, 0xd71fdd);
@@ -1072,8 +1080,9 @@ public class MainRegistry {
 		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModBlocks.red_barrel), new ItemStack(ModItems.tank_steel), FluidType.DIESEL, 10000));
 		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModBlocks.pink_barrel), new ItemStack(ModItems.tank_steel), FluidType.KEROSENE, 10000));
 		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModBlocks.lox_barrel), new ItemStack(ModItems.tank_steel), FluidType.OXYGEN, 10000));
-		
-		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModBlocks.ore_gneiss_gas), new ItemStack(ModBlocks.stone_gneiss), FluidType.PETROLEUM, 250));
+
+		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModBlocks.ore_oil), null, FluidType.OIL, 250));
+		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModBlocks.ore_gneiss_gas), null, FluidType.PETROLEUM, 250));
 
 		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModItems.cell_deuterium), new ItemStack(ModItems.cell_empty), FluidType.DEUTERIUM, 1000));
 		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModItems.cell_tritium), new ItemStack(ModItems.cell_empty), FluidType.TRITIUM, 1000));
@@ -1086,6 +1095,7 @@ public class MainRegistry {
 		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModItems.cell_anti_schrabidium), new ItemStack(ModItems.cell_empty), FluidType.ASCHRAB, 1000));
 		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModItems.cell_sas3), new ItemStack(ModItems.cell_empty), FluidType.SAS3, 1000));
 		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModItems.bottle_mercury), new ItemStack(Items.glass_bottle), FluidType.MERCURY, 1000));
+		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModItems.nugget_mercury), null, FluidType.MERCURY, 125));
 
 		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModItems.tank_waste, 1, 1), new ItemStack(ModItems.tank_waste, 1, 0), FluidType.WATZ, 8000));
 		FluidContainerRegistry.registerContainer(new FluidContainer(new ItemStack(ModItems.tank_waste, 1, 2), new ItemStack(ModItems.tank_waste, 1, 1), FluidType.WATZ, 8000));
@@ -1167,11 +1177,20 @@ public class MainRegistry {
 		MinecraftForge.TERRAIN_GEN_BUS.register(commonHandler);
 		MinecraftForge.ORE_GEN_BUS.register(commonHandler);
 		
+		SchistStratum schist = new SchistStratum();
+		MinecraftForge.EVENT_BUS.register(schist); //DecorateBiomeEvent.Pre
+		
 		PacketDispatcher.registerPackets();
 
 		ChunkRadiationManager radiationSystem = new ChunkRadiationManager();
 		MinecraftForge.EVENT_BUS.register(radiationSystem);
 		FMLCommonHandler.instance().bus().register(radiationSystem);
+		
+		if(event.getSide() == Side.CLIENT) {
+			HbmKeybinds.register();
+			HbmKeybinds keyHandler = new HbmKeybinds();
+			FMLCommonHandler.instance().bus().register(keyHandler);
+		}
 	}
 	
 	//yes kids, this is where we would usually register commands
